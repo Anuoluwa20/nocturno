@@ -120,147 +120,244 @@
   }
 
   // ============ 01 LANDING ============
+  let bootFirst = !!document.querySelector('#app .boot');
   routes.home = (v) => {
     const F = ND.HERO_FRAMES;
-    const seq = [{ img: 'K1-sketch-empty', sk: true, cap: 'Draw the walls' }, { img: 'K2-sketch-furnished', sk: true, cap: 'Place the furniture' }, { img: 'K3-sketch-rendered', sk: true, cap: 'Choose the materials' }];
+    if (bootFirst && performance.now() < 5000) { v.style.setProperty('--el', -Math.round(performance.now()) + 'ms'); bootFirst = false; }
+    bootFirst = false;
+    const reduce = reduced() || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ROOMS = [{ id: 'studio', n: 'Studio', a: '32 m²' }, { id: 'onebed', n: 'One bedroom', a: '55 m²' }, { id: 'office', n: 'Workspace', a: '24 m²' }];
+    const DAY = [
+      { t: 7, img: 'L2-morning', h: 'Morning', p: 'Low sun across the floor. The desk faces the light.' },
+      { t: 12, img: 'L3-noon', h: 'Noon', p: 'Flat, even light. Every finish shows its true colour.' },
+      { t: 17.5, img: 'L4-golden-hour', h: 'Golden hour', p: 'Long shadows. The oak warms and the linen glows.' },
+      { t: 19.67, img: 'L1-dusk', h: 'Dusk', p: 'The city switches on, and so does the arched lamp.' },
+      { t: 23, img: 'L5-night', h: 'Night', p: 'Only the lamps. The room closes in around the sofa.' }];
+    const STEPS = [['Pick a layout.', 'Studio, one or two bedrooms, or a workspace on its own.'], ['Place the furniture.', 'Drag, rotate and resize. Everything snaps to 5 cm.'], ['Choose the materials.', 'Fabric, wood and walls change as you pick, and so does the price.'], ['Set the light.', 'Morning, noon or dusk. Lamps come on when it gets dark.']];
+    const SKETCH = [['K1-sketch-empty', 'Line drawing of an empty room'], ['K2-sketch-furnished', 'The room drawn with a sofa, table and desk'], ['K3-sketch-rendered', 'The room shaded, with a wood floor'], ['L4-golden-hour', 'The finished room in late afternoon light']];
+    const roman = ['I', 'II', 'III'];
+    const head = (i, title, lede, extra = '') => `<div class="lp-head" data-rv><span class="lp-idx num">${String(i).padStart(2, '0')}</span><h2 class="lp-h">${title}</h2><div class="lp-head-r">${lede ? `<p class="lp-p">${lede}</p>` : ''}${extra}</div></div>`;
     v.innerHTML = `
 <a class="skip" href="#main">Skip to content</a>
-<header class="land-nav">${logo()}<span style="flex:1"></span><a class="nl" href="#how">How it works</a><a class="nl" href="#styles">Styles</a><a class="nl" href="#budget">Pricing</a><a class="nl" href="#login">Sign in</a><a class="btn sm" href="#signup">Start designing</a></header>
-<main id="main">
-<section class="hp" aria-label="Introduction">
-  <div class="hp-frames" id="hpFrames">${F.map((f, i) => `<img src="img/${f.img}.webp" alt="${i === 3 ? 'A furnished living room at dusk with lamps on and the city outside' : ''}" data-t="${f.t}" ${i === 3 ? 'class="on"' : ''}>`).join('')}</div>
-  <div class="hp-shade" aria-hidden="true"></div>
-  <div class="hp-copy">
-    <h1 class="display hp-title" aria-label="Design your world before you live in it."><span class="ln" style="--i:0" aria-hidden="true"><span>Design your world</span></span><span class="ln" style="--i:1" aria-hidden="true"><span><em>before</em> you live in it.</span></span></h1>
-    <p class="hp-lede">Plan an apartment or a studio in 3D, with real furniture, real prices and the light at any hour.</p>
-    <div class="hero-cta"><a class="btn btn-light" href="#signup">Create a free account</a><button class="hp-link" id="trySample">Try the sample room <span aria-hidden="true">→</span></button></div>
+<header class="lp-nav" id="lpNav">${logo()}<nav class="lp-links" aria-label="Sections"><a href="#how">How it works</a><a href="#styles">Styles</a><a href="#budget">Pricing</a></nav><span class="lp-clock" id="lpClock" aria-hidden="true"></span><a class="lp-in" href="#login">Sign in</a><a class="btn sm" href="#signup">Start designing</a></header>
+<main id="main" class="lp">
+<section class="lp-hero" aria-label="Introduction">
+  <div class="lp-copy">
+    <div class="lp-copy-main">
+      <p class="lp-eyebrow"><span class="num">N°01</span><span>Apartment &amp; workspace planner</span></p>
+      <h1 class="lp-title" aria-label="Design your world before you live in it."><span class="ln" aria-hidden="true"><span>Design your world</span></span><span class="ln" aria-hidden="true"><span><em>before</em> you</span></span><span class="ln" aria-hidden="true"><span>live in it.</span></span></h1>
+      <p class="lp-lede">Plan an apartment or a studio in 3D, with real furniture, real prices and the light at any hour.</p>
+      <div class="lp-cta"><a class="btn" href="#signup">Create a free account</a><button type="button" class="lp-link" id="trySample">Try the sample room <span aria-hidden="true">→</span></button></div>
+    </div>
+    <div class="lp-rooms" role="radiogroup" aria-label="Layout shown in the 3D room">${ROOMS.map((r, i) => `<button type="button" role="radio" aria-checked="${i === 0}" data-l="${r.id}"><span class="num">0${i + 1}</span><b>${r.n}</b><small>${r.a}</small></button>`).join('')}</div>
   </div>
-  <div class="hp-times" role="radiogroup" aria-label="See the room at another time">${F.map((f, i) => `<button type="button" role="radio" data-t="${f.t}" aria-checked="${i === 3}"><b class="num">${ND.fmtTime(f.t)}</b> ${ND.timeLabel(f.t)}</button>`).join('')}</div>
-</section>
-
-<section class="statement" data-rv><p>A room is more than its furniture. It is how the light moves through it.</p></section>
-
-<section class="hero try" id="try" aria-label="Live 3D room">
-  <div class="try-head"><h2 class="h1">Now make it yours.</h2><p class="lede">This is the planner itself. Drag to turn the room, and move the sun with the dial.</p></div>
-  <div class="try-frame">
-  <div class="hero-stage">
-    <div class="hero-frames" id="frames">${seq.map((s, i) => `<img class="sk${i === 0 ? ' on' : ''}" ${i === 0 ? 'src' : 'data-src'}="img/${s.img}.webp" alt="" data-k="${i}">`).join('')}${F.map((f, i) => `<img data-src="img/${f.img}.webp" alt="" data-t="${f.t}">`).join('')}<div class="hero-wash" id="wash"></div><div class="hero-live" id="live" aria-label="Live 3D sample room. Drag to turn it."></div><div class="tags" id="tags" aria-hidden="true"></div></div>
-    <p class="hero-caption" id="heroCap"><b>01</b> · Draw the walls</p>
-    <div class="dial dusk-dial-l"><div class="dial-head"><span class="label">Time of day</span><span class="dial-time" id="heroTime"></span></div>${phasesRow(true)}${track('heroRuler', 'Time of day in the sample room')}</div>
-  </div>
+  <div class="lp-stage" id="lpStage">
+    <div class="lp-scene" id="heroScene">
+      <div class="lp-frames" id="frames"><img class="sk on" src="img/K1-sketch-empty.webp" alt="">${F.map(f => `<img data-src="img/${f.img}.webp" alt="" data-t="${f.t}">`).join('')}</div>
+      <div class="lp-wash" id="wash"></div>
+      <div class="lp-live" id="heroLive" aria-label="Live 3D sample room. Drag to turn it."></div>
+      <div class="lp-tags" id="heroTags" aria-hidden="true"></div>
+    </div>
+    <p class="lp-cap" id="lpCap" aria-live="polite"><span class="num">01</span><span>Draw the walls</span></p>
+    <div class="dial lp-dial"><div class="dial-head"><span class="label">Time of day</span><span class="dial-time" id="heroTime"></span></div>${phasesRow(true)}${track('heroRuler', 'Time of day in the sample room')}</div>
   </div>
 </section>
 
-<section class="land-sec" id="how">
-  <div class="ed-head" data-rv><h2 class="h1">From a line drawing<br>to a lit room.</h2><p class="lede">Every space opens furnished, so you start by changing things.</p></div>
-  <div class="story">
-    <div class="story-pin"><div class="story-frame">${[['K1-sketch-empty', 'Line drawing of an empty room'], ['K2-sketch-furnished', 'The room drawn with a sofa, table and desk'], ['K3-sketch-rendered', 'The room shaded, with a wood floor'], ['L4-golden-hour', 'The finished room in late afternoon light']].map(([f, alt], i) => `<img src="img/${f}.webp" alt="${alt}" class="${i === 0 ? 'on' : ''}${i < 3 ? ' sk' : ''}">`).join('')}</div><div class="story-rail" aria-hidden="true"><i id="storyRail"></i></div></div>
-    <ol class="story-steps">${[['Pick a layout.', 'Studio, one or two bedrooms, or a workspace on its own.'], ['Place the furniture.', 'Drag, rotate and resize. Everything snaps to 5 cm.'], ['Choose the materials.', 'Fabric, wood and walls change as you pick, and so does the price.'], ['Set the light.', 'Morning, noon or dusk. Lamps come on when it gets dark.']].map(([h, p], i) => `<li data-step="${i}" class="${i === 0 ? 'on' : ''}"><h3 class="h2">${h}</h3><p class="lede">${p}</p></li>`).join('')}</ol>
+<section class="lp-statement" aria-label="Statement"><p class="lp-words" id="words">A room is more than its furniture. It is how the light <em>moves through it.</em></p></section>
+
+<section class="lp-day" id="day" aria-label="One room, five times a day">
+  <div class="lp-day-pin">
+    <div class="lp-day-imgs">${DAY.map((d, i) => `<img src="img/${d.img}.webp" alt="${i === 0 ? 'The same living room shown at five times of day' : ''}" class="${i === 0 ? 'on' : ''}">`).join('')}</div>
+    <div class="lp-day-shade" aria-hidden="true"></div>
+    <div class="lp-day-in">
+      <p class="lp-day-label"><span class="num">01</span>One room, five times a day</p>
+      <div class="lp-day-copy"><p class="lp-day-time num" id="dayTime">07:00</p><div class="lp-day-txt">${DAY.map((d, i) => `<div class="${i === 0 ? 'on' : ''}"><h3>${d.h}</h3><p>${d.p}</p></div>`).join('')}</div></div>
+      <div class="lp-sun" aria-hidden="true"><div class="lp-sun-line"><i id="sunFill"></i><b id="sunDot"></b></div><div class="lp-sun-ticks">${DAY.map(d => `<span style="left:${((d.t - 6) / 18 * 100).toFixed(2)}%">${ND.fmtTime(d.t)}</span>`).join('')}</div></div>
+    </div>
   </div>
 </section>
 
-<section class="land-sec" id="styles">
-  <div class="caps-head" data-rv><h2 class="h1">Eight ways to furnish it.</h2><div class="car-nav"><button type="button" class="car-btn" id="carPrev" aria-label="Previous styles">←</button><button type="button" class="car-btn" id="carNext" aria-label="Next styles">→</button></div></div>
-  <div class="tiles">${ND.STYLES.map((s, i) => { const W = ND.WALLS.find(w => w.id === s.wall) || {}, F = ND.FLOORS[s.floor], WO = ND.MAT[s.wood];
-    return `<a class="tile t${i % 4}" href="#signup" data-rv style="--i:${i % 4}"><div class="tile-img"><img src="img/${s.img}.webp" alt="${esc(s.name)} living room"></div>
-    <h3 class="tile-name">${esc(s.name)}</h3><p class="tile-meta">${esc(W.name)} <span>|</span> ${esc(F.name)} <span>|</span> ${esc(WO.name)}</p></a>`; }).join('')}</div>
+<section class="lp-sec lp-try" id="try" aria-label="Live 3D room">
+  ${head(2, 'Now make it <em>yours</em>.', 'This is the planner itself. Pick a style and the room refurnishes; drag to turn it.')}
+  <div class="lp-cfg" data-rv>
+    <div class="lp-try-frame">
+      <div class="lp-scene" id="tryScene"><div class="lp-live" id="tryLive"></div><div class="lp-tags" id="tryTags" aria-hidden="true"></div><p class="lp-hint">Drag to turn</p></div>
+    </div>
+    <aside class="lp-panel" aria-label="Configure the room">
+      <p class="lp-panel-h"><span>Style</span><span>Room total</span></p>
+      <div class="lp-chips" role="radiogroup" aria-label="Style">${ND.STYLES.map((s, i) => `<button type="button" role="radio" aria-checked="${s.id === 'scandi'}" data-s="${s.id}"><span class="dots">${s.palette.map(c => `<i style="background:${c}"></i>`).join('')}</span><span class="nm">${esc(s.name)}</span><span class="pr num" data-pr="${s.id}"></span></button>`).join('')}</div>
+      <div class="lp-panel-time"><p class="lp-panel-h"><span>Light</span><span class="num" id="tryTime"></span></p>${phasesRow(false)}</div>
+      <div class="lp-panel-foot"><div class="lp-total"><span class="label" id="tryCount">Room total</span><b class="num" id="tryTotal">—</b></div><a class="btn" href="#signup">Open in the planner</a></div>
+    </aside>
+  </div>
 </section>
 
-<section class="land-sec" id="budget">
-  <div class="priced" data-rv>
-    <figure class="priced-img"><img src="img/D1-studio-lisbon.webp" alt="A furnished studio apartment"><figcaption>Studio, 32 m². Example prices.</figcaption></figure>
-    <div class="priced-list">
-      <h2 class="h1">Know what<br>it costs.</h2>
-      <p class="lede">Every piece is priced. Change a finish and the total changes with it.</p>
-      <table class="basket"><tbody>
+<section class="lp-sec" id="how">
+  ${head(3, 'From a line drawing<br>to a lit room.', 'Every space opens furnished, so you start by changing things.')}
+  <div class="lp-story">
+    <div class="lp-story-pin"><div class="lp-story-frame">${SKETCH.map(([f, alt], i) => `<img src="img/${f}.webp" alt="${alt}" class="${i === 0 ? 'on' : ''}${i < 3 ? ' sk' : ''}">`).join('')}</div><div class="lp-story-foot"><span class="num" id="storyN">01 / 04</span><span class="lp-rail" role="progressbar" aria-label="Step" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" id="storyBar"><i id="storyRail"></i></span></div></div>
+    <ol class="lp-steps">${STEPS.map(([h, p], i) => `<li data-step="${i}" class="${i === 0 ? 'on' : ''}"><img class="lp-step-img${i < 3 ? ' sk' : ''}" src="img/${SKETCH[i][0]}.webp" alt="" loading="lazy"><span class="num">0${i + 1}</span><h3>${h}</h3><p>${p}</p></li>`).join('')}</ol>
+  </div>
+</section>
+
+<section class="lp-sec" id="styles">
+  ${head(4, 'Eight ways to furnish it.', '', '<div class="lp-car-nav"><button type="button" id="carPrev" aria-label="Previous styles">←</button><button type="button" id="carNext" aria-label="Next styles">→</button></div>')}
+  <div class="lp-car" id="car">${ND.STYLES.map((s, i) => { const W = ND.WALLS.find(w => w.id === s.wall) || {}, Fl = ND.FLOORS[s.floor], WO = ND.MAT[s.wood];
+    return `<a class="lp-tile" href="#signup" draggable="false"><div class="lp-tile-img"><img src="img/${s.img}.webp" alt="${esc(s.name)} living room" draggable="false"></div><div class="lp-tile-row"><span class="num">${String(i + 1).padStart(2, '0')}</span><h3>${esc(s.name)}</h3></div><p class="lp-tile-line">${esc(s.line)}</p><p class="lp-tile-meta">${esc(W.name)} · ${esc(Fl.name)} · ${esc(WO.name)}</p></a>`; }).join('')}</div>
+  <div class="lp-car-bar" aria-hidden="true"><i id="carBar"></i></div>
+</section>
+
+<section class="lp-sec" id="budget">
+  ${head(5, 'Know what it costs.', 'Every piece is priced. Change a finish and the total changes with it.')}
+  <div class="lp-priced">
+    <figure class="lp-priced-img" data-rv><img src="img/D1-studio-lisbon.webp" alt="A furnished studio apartment"><figcaption>Studio, 32 m². Example prices.</figcaption></figure>
+    <div class="lp-basket" data-rv style="--i:1">
+      <table><tbody>
         <tr><td>Curved sofa<span class="fin" role="radiogroup" aria-label="Sofa finish">${[['Ivory bouclé', 1890], ['Stone linen', 1795], ['Cognac leather', 2265]].map(([n, pr], k) => `<button type="button" role="radio" aria-checked="${k === 0}" data-price="${pr}">${n}</button>`).join('')}</span></td><td class="num" id="spSeat">${money(1890)}</td></tr>
         <tr><td>Round coffee table<span>Oak</span></td><td class="num">${money(520)}</td></tr>
         <tr><td>Writing desk<span>Oak</span></td><td class="num">${money(780)}</td></tr>
         <tr><td>Arched floor lamp<span>Graphite</span></td><td class="num">${money(340)}</td></tr>
         <tr><td>Wool rug<span>240 × 170 cm</span></td><td class="num">${money(1330)}</td></tr>
       </tbody><tfoot><tr><td>Total<span id="spLeft">${money(1140)} under a ${money(6000)} budget</span></td><td class="num" id="spTotal">${money(4860)}</td></tr></tfoot></table>
+      <div class="lp-meter-wrap"><div class="lp-meter" role="progressbar" aria-label="Share of budget used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="81" id="spBar"><i id="spMeter" style="width:81%"></i></div><div class="lp-meter-lab"><span id="spPct">81% of budget</span><span>${money(6000)}</span></div></div>
     </div>
   </div>
 </section>
 
-<section class="night-band"><div class="night-grid walk-index">
-  <div class="wi-frame" data-rv>${[['Living room', 'L1-dusk'], ['Bedroom', 'D3-quiet-bedroom'], ['Home office', 'C2-monitor']].map(([n, f], i) => `<img src="img/${f}.webp" alt="${n}" class="${i === 0 ? 'on' : ''}" data-r="${i}">`).join('')}</div>
-  <div class="wi-text" data-rv style="--i:1"><h2 class="h1">Walk through it before you move.</h2><p class="lede" style="color:#C9C9C9">Step inside at eye height, one room at a time.</p>
-    <ol class="wi-rooms">${[['Living room', 'Sofa, desk corner, the window to the city.'], ['Bedroom', 'Low bed, paper lantern, blackout linen.'], ['Home office', 'Standing desk, task chair, morning light.']].map(([n, d], i) => `<li><a href="#signup" data-r="${i}" class="${i === 0 ? 'on' : ''}"><span><b>${n}</b><small>${d}</small></span><span class="wi-enter">Enter →</span></a></li>`).join('')}</ol>
+<section class="lp-night" aria-label="Walkthrough"><div class="lp-night-in">
+  <div class="lp-wi-frame" data-rv>${[['Living room', 'L1-dusk'], ['Bedroom', 'D3-quiet-bedroom'], ['Home office', 'L2-morning']].map(([n, f], i) => `<img src="img/${f}.webp" alt="${n}" class="${i === 0 ? 'on' : ''}" data-r="${i}">`).join('')}</div>
+  <div class="lp-wi-text" data-rv style="--i:1"><p class="lp-wi-label"><span class="num">06</span>Walkthrough</p><h2 class="lp-h">Walk through it before you move.</h2><p class="lp-p">Step inside at eye height, one room at a time.</p>
+    <ol class="lp-wi-rooms">${[['Living room', 'Sofa, desk corner, the window to the city.'], ['Bedroom', 'Low bed, paper lantern, blackout linen.'], ['Home office', 'Standing desk, task chair, morning light.']].map(([n, d], i) => `<li><a href="#signup" data-r="${i}" class="${i === 0 ? 'on' : ''}"><span class="lp-wi-no">${roman[i]}</span><span><b>${n}</b><small>${d}</small></span><span class="lp-wi-go">Enter <span aria-hidden="true">→</span></span></a></li>`).join('')}</ol>
   </div></div></section>
 </main>
-<footer class="foot2">
-  <div class="f2-top"><p class="f2-cta"><span class="h2">Start with one room.</span><a class="btn" href="#signup">Create a free account</a></p>
-    <nav class="f2-links" aria-label="Footer"><div><p class="label">Product</p><a href="#how">How it works</a><a href="#styles">Styles</a><a href="#budget">Pricing</a></div><div><p class="label">Account</p><a href="#signup">Create account</a><a href="#login">Sign in</a></div></nav></div>
-  <div class="f2-mark" aria-hidden="true">${logo('f2-logo', '#home')}</div>
-  <div class="f2-base"><span>Prices are estimates, not live retail prices.</span></div>
+<footer class="lp-foot">
+  <div class="lp-foot-top"><div class="lp-foot-cta"><h2 class="lp-h">Start with one room.</h2><a class="btn" href="#signup">Create a free account</a></div>
+    <nav class="lp-foot-links" aria-label="Footer"><div><p class="label">Product</p><a href="#how">How it works</a><a href="#styles">Styles</a><a href="#budget">Pricing</a></div><div><p class="label">Account</p><a href="#signup">Create account</a><a href="#login">Sign in</a></div></nav></div>
+  <div class="lp-foot-mark f2-mark" aria-hidden="true">${logo('f2-logo', '#home')}</div>
+  <div class="lp-foot-base"><span>Prices are estimates, not live retail prices.</span><span id="footClock"></span></div>
 </footer>`;
 
-    // anchor links without changing the route
-    $$('a[href="#how"],a[href="#styles"],a[href="#budget"]', v).forEach(a => a.onclick = (e) => { e.preventDefault(); $(a.getAttribute('href'), v).scrollIntoView({ behavior: document.documentElement.classList.contains('reduce-motion') ? 'auto' : 'smooth' }); });
+    // anchors scroll inside the page instead of changing the route
+    $$('a[href="#how"],a[href="#styles"],a[href="#budget"]', v).forEach(a => a.onclick = (e) => { e.preventDefault(); $(a.getAttribute('href'), v).scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); });
     $('#trySample', v).onclick = () => { intent = 'sample'; go('signup'); };
 
-    // hero: the room opens as a line drawing, the camera moves in, then it lights up at dusk
-    const imgs = $$('#frames img', v), cap = $('#heroCap', v), ruler = $('#heroRuler', v), tEl = $('#heroTime', v), wash = $('#wash', v);
-    const T0 = 0, T1 = 24; let t = 19.67, timers = []; cap.hidden = true;
-    const reduce = reduced() || matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const clockT = 0;
-    const st = getStage(); let live = null, tagEls = [];
-    if (st.ok) {
-      live = NStore.newProject({ name: 'Hero', type: 'apartment', layout: 'studio', style: 'scandi' }); live.atmos.time = t; live.atmos.view = 'city-dusk';
-      const pins = ['lamp-arc', 'sofa-boucle', 'desk-oak'].map(id => live.items.find(i => i.item === id)).filter(Boolean);
-      $('#tags', v).innerHTML = pins.map((r, i) => { const it = ND.itemById[r.item]; return `<span class="tag-pin" style="--i:${i}"><i></i>${esc(it.name)} · ${money(itemCostLocal(r))}</span>`; }).join(''); tagEls = $$('#tags .tag-pin', v);
-      st.on('frame', () => { if (!live || !$('#live', v)) return; const H = st.renderer.domElement.getBoundingClientRect(); pins.forEach((r, i) => { const it = ND.itemById[r.item]; const s = st.screenOf(new THREE.Vector3(r.x, (it.light ? it.light.y : it.h) + 0.05, r.z)); tagEls[i].style.transform = `translate(${s.x}px, ${s.y}px)`; tagEls[i].style.visibility = s.behind || s.x < 8 || s.x > H.width - 180 || s.y < 70 ? 'hidden' : 'visible'; }); });
-    }
-    function drift() { if (reduce) return; st.controls.autoRotate = true; st.controls.autoRotateSpeed = 0.3; st.renderer.domElement.addEventListener('pointerdown', () => { st.controls.autoRotate = false; }, { once: true }); }
-    function goLive() {
-      st.mount($('#live', v)); st.setMode('view'); st.controls.enableZoom = false; st.controls.enablePan = false; st.setProject(live);
-      const r = live.rooms[0], tgt = new THREE.Vector3(r.w * 0.46, 0.2, r.d * 0.42), near = new THREE.Vector3(r.w * 0.86 + 1, 5.4, r.d + 5.8), far = new THREE.Vector3(r.w * 0.92 + 6.5, 11.5, r.d + 13);
-      $('#live', v).classList.add('on'); imgs.forEach(i => i.classList.remove('on'));
-      if (reduce) { st.setLook('render'); st.flyTo(near, tgt, false); $('#tags', v).classList.add('on'); return; }
-      st.setLook('sketch'); st.flyTo(far, tgt, false); st.camAnim = { p0: far.clone(), t0: tgt.clone(), p1: near, t1: tgt, s: performance.now(), d: 3600 };
-      timers.push(setTimeout(() => { wash.classList.add('on'); timers.push(setTimeout(() => { st.setLook('render'); st.applyAtmos(); wash.classList.remove('on'); $('#tags', v).classList.add('on'); }, 400)); }, 1700));
-      timers.push(setTimeout(drift, 3700));
-    }
-    const hpImgs = $$('#hpFrames img', v);
-    function heroPhoto(tt) { const near = F.reduce((x, f) => Math.abs(f.t - tt) < Math.abs(x.t - tt) ? f : x, F[0]); hpImgs.forEach(im => im.classList.toggle('on', +im.dataset.t === near.t)); $$('.hp-times button', v).forEach(b => b.setAttribute('aria-checked', String(+b.dataset.t === near.t))); }
-    { const d = new Date(); heroPhoto(d.getHours() + d.getMinutes() / 60); }
-    $$('.hp-times button', v).forEach(b => b.onclick = () => heroPhoto(+b.dataset.t));
-    const car = $('.tiles', v); const step = () => (car.querySelector('.tile') || {}).offsetWidth + 24;
-    $('#carPrev', v).onclick = () => car.scrollBy({ left: -step(), behavior: reduce ? 'auto' : 'smooth' }); $('#carNext', v).onclick = () => car.scrollBy({ left: step(), behavior: reduce ? 'auto' : 'smooth' });
-    function show(el) { imgs.forEach(i => i.classList.toggle('on', i === el)); }
-    function setT(nt) {
-      t = Math.max(T0, Math.min(T1 - 0.01, nt)); ruler.style.setProperty('--p', ((t - T0) / (T1 - T0) * 100) + '%'); tEl.innerHTML = ND.fmtTime(t) + ' <em>' + ND.timeLabel(t) + '</em>'; markPhase(v, t); ruler.setAttribute('aria-valuenow', t.toFixed(2)); ruler.setAttribute('aria-valuetext', ND.fmtTime(t) + ', ' + ND.timeLabel(t));
-      const near = F.reduce((a, f) => Math.abs(f.t - t) < Math.abs(a.t - t) ? f : a, F[0]);
-      if (live) { live.atmos.time = t; if (st.project === live) st.applyAtmos(); } else show(imgs.find(i => +i.dataset.t === near.t));
+    // local clock in the nav and the footer
+    const tick = () => { const d = new Date(), tt = d.getHours() + d.getMinutes() / 60; const lab = ND.timeLabel(tt); $('#lpClock', v).innerHTML = `<span class="num">${ND.fmtTime(tt)}</span> ${lab[0].toUpperCase() + lab.slice(1)}`; $('#footClock', v).textContent = `It is ${ND.fmtTime(tt)} where you are. ${ND.timeLabel(tt)[0].toUpperCase() + ND.timeLabel(tt).slice(1)}.`; };
+    tick(); const clockT = setInterval(tick, 30000);
 
+    // ---------- the live room: one stage, shown in the hero and again in "make it yours" ----------
+    const st = getStage(); const timers = []; let live = null, cur = { layout: 'studio', style: 'scandi' }, t = 19.67, pins = [], hostKey = 'hero';
+    const imgs = $$('#frames img', v), cap = $('#lpCap', v), ruler = $('#heroRuler', v), tEl = $('#heroTime', v), wash = $('#wash', v);
+    const HOST = { hero: { live: $('#heroLive', v), tags: $('#heroTags', v) }, try: { live: $('#tryLive', v), tags: $('#tryTags', v) } };
+    const build = () => { const p = NStore.newProject({ name: 'Hero', type: cur.layout === 'office' ? 'workspace' : 'apartment', layout: cur.layout, style: cur.style }); p.atmos.time = t; p.atmos.view = 'city-dusk'; return p; };
+    const camFor = (p, host) => { const el = HOST[host || hostKey].live; const a = (el.clientWidth || 16) / (el.clientHeight || 9); const m = Math.pow(Math.max(1, 1.75 / a), 0.8); const b = { w: Math.max(...p.rooms.map(x => x.x + x.w)), d: Math.max(...p.rooms.map(x => x.z + x.d)) }; const tgt = new THREE.Vector3(b.w * 0.46, 0.2, b.d * 0.44); const k = Math.max(1, b.w / 8); const at = (x, y, z, mm) => new THREE.Vector3(x, y, z).sub(tgt).multiplyScalar(mm).add(tgt); return { tgt, near: at(b.w * 0.86 + 1, 5.2 * k, b.d + 5.6 * k, m), far: at(b.w * 0.92 + 6.5, 11.5 * k, b.d + 13 * k, m) }; };
+    function renderPins() {
+      const recs = live.items.slice().sort((a, b) => itemCostLocal(b) - itemCostLocal(a));
+      const lamp = live.items.find(r => (ND.itemById[r.item] || {}).light);
+      pins = [lamp, ...recs].filter((r, i, a) => r && a.indexOf(r) === i).slice(0, 3);
+      const html = pins.map((r, i) => `<span class="lp-pin" style="--i:${i}"><i></i>${esc(ND.itemById[r.item].name)} <b class="num">${money(itemCostLocal(r))}</b></span>`).join('');
+      HOST.hero.tags.innerHTML = html; HOST.try.tags.innerHTML = html;
+      const tot = live.items.reduce((a, r) => a + itemCostLocal(r), 0); countUp($('#tryTotal', v), Math.round(tot)); $('#tryCount', v).textContent = live.items.length + ' pieces';
+      ND.STYLES.forEach(sty => { const q = NStore.newProject({ name: 'x', type: 'apartment', layout: cur.layout, style: sty.id }); const el = v.querySelector(`[data-pr="${sty.id}"]`); if (el) el.textContent = money(Math.round(q.items.reduce((a, r) => a + itemCostLocal(r), 0))); });
     }
-    if (live) { const tio = 'IntersectionObserver' in window ? new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) { tio.disconnect(); goLive(); setT(t); } }, { rootMargin: '0px 0px -20% 0px' }) : null; if (tio) tio.observe($('#try', v)); else goLive(); }
-    else imgs.forEach(i => { if (i.dataset.src) i.src = i.dataset.src; });
+    if (st.ok) {
+      live = build();
+      st.on('frame', () => placePins());
+    }
+    function placePins() { if (!st.ok) return; { if (!live || st.project !== live) return; st.camera.updateMatrixWorld(); const H = HOST[hostKey]; const els = H.tags.children; const R = st.renderer.domElement.getBoundingClientRect(); pins.forEach((r, i) => { const it = ND.itemById[r.item]; if (!els[i] || !it) return; const s = st.screenOf(new THREE.Vector3(r.x, (it.light ? it.light.y : it.h) + 0.05, r.z)); els[i].style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px)`; els[i].style.visibility = s.behind || s.x < 12 || s.x > R.width - 200 || s.y < 40 || s.y > R.height - 40 ? 'hidden' : 'visible'; }); }
+    }
+    function drift() { if (reduce || !st.ok) return; st.controls.autoRotate = true; st.controls.autoRotateSpeed = 0.35; }
+    const stopDrift = () => { if (st.ok) st.controls.autoRotate = false; };
+    function caption(n, text) { cap.innerHTML = `<span class="num">0${n}</span><span>${text}</span>`; cap.classList.remove('swap'); void cap.offsetWidth; cap.classList.add('swap'); }
+    function goLive() {
+      st.mount(HOST.hero.live); st.setMode('view'); st.controls.enableZoom = false; st.controls.enablePan = false; st.setProject(live); renderPins();
+      HOST.hero.live.addEventListener('pointerdown', stopDrift); HOST.try.live.addEventListener('pointerdown', stopDrift);
+      const c = camFor(live); HOST.hero.live.classList.add('on'); imgs.forEach(i => i.classList.remove('on'));
+      if (reduce) { st.setLook('render'); st.flyTo(c.near, c.tgt, false); v.classList.add('lp-lit'); cap.hidden = true; return; }
+      st.setLook('sketch'); st.flyTo(c.far, c.tgt, false); st.camAnim = { p0: c.far.clone(), t0: c.tgt.clone(), p1: c.near, t1: c.tgt, s: performance.now(), d: 3800 };
+      timers.push(setTimeout(() => caption(2, 'Place the furniture'), 1300));
+      timers.push(setTimeout(() => { caption(3, 'Turn on the light'); wash.classList.add('on'); timers.push(setTimeout(() => { st.setLook('render'); st.applyAtmos(); wash.classList.remove('on'); v.classList.add('lp-lit'); }, 420)); }, 2300));
+      timers.push(setTimeout(() => cap.classList.add('gone'), 4200));
+      timers.push(setTimeout(drift, 3900));
+    }
+    function rebuild(keepCam) {
+      if (!st.ok) return; live = build(); st.setProject(live, { keepCamera: keepCam }); if (!keepCam) { const c = camFor(live); st.flyTo(c.near, c.tgt, !reduce); }
+      if (st.look !== 'render') st.setLook('render'); renderPins();
+      if (!reduce && st.pop) live.items.forEach((r, i) => timers.push(setTimeout(() => st.pop(r.uid), 40 + i * 55)));
+    }
+    // layouts in the hero, styles in the configurator
+    $$('.lp-rooms button', v).forEach(b => b.onclick = () => { $$('.lp-rooms button', v).forEach(x => x.setAttribute('aria-checked', String(x === b))); cur.layout = b.dataset.l; rebuild(false); });
+    $$('.lp-chips button', v).forEach(b => b.onclick = () => { $$('.lp-chips button', v).forEach(x => x.setAttribute('aria-checked', String(x === b))); cur.style = b.dataset.s; rebuild(true); });
+
+    // the stage follows whichever frame is on screen
+    let hostIO = null;
+    if (st.ok && 'IntersectionObserver' in window) {
+      const ratios = { hero: 1, try: 0 };
+      hostIO = new IntersectionObserver(es => { es.forEach(x => { ratios[x.target.dataset.host] = x.intersectionRatio; }); const want = ratios.try > ratios.hero ? 'try' : 'hero'; if (want !== hostKey && st.project === live) { hostKey = want; st.mount(HOST[want].live); HOST[want].live.classList.add('on'); HOST[want].tags.classList.add('on'); const c = camFor(live, want); st.flyTo(c.near, c.tgt, false); placePins(); } }, { threshold: [0, .15, .3, .45, .6, .75, .9, 1] });
+      $('#lpStage', v).dataset.host = 'hero'; $('.lp-try-frame', v).dataset.host = 'try'; hostIO.observe($('#lpStage', v)); hostIO.observe($('.lp-try-frame', v));
+    } else if (!st.ok) { $('#try', v).hidden = true; }
+
+    function setT(nt) {
+      t = Math.max(0, Math.min(23.99, nt)); ruler.style.setProperty('--p', (t / 24 * 100) + '%'); tEl.innerHTML = ND.fmtTime(t) + ' <em>' + ND.timeLabel(t) + '</em>'; markPhase(v, t); const tt2 = $('#tryTime', v); if (tt2) tt2.textContent = ND.fmtTime(t) + ' · ' + ND.timeLabel(t); ruler.setAttribute('aria-valuenow', t.toFixed(2)); ruler.setAttribute('aria-valuetext', ND.fmtTime(t) + ', ' + ND.timeLabel(t));
+      if (live) { live.atmos.time = t; if (st.project === live) st.applyAtmos(); }
+      else { const near = F.reduce((a, f) => Math.abs(f.t - t) < Math.abs(a.t - t) ? f : a, F[0]); imgs.forEach(i => i.classList.toggle('on', +i.dataset.t === near.t)); }
+    }
+    if (live) { const start = () => timers.push(setTimeout(() => { goLive(); setT(t); }, reduce ? 0 : 420)); const r0 = $('#lpStage', v).getBoundingClientRect(); if (r0.top < innerHeight * 0.75 || !('IntersectionObserver' in window)) start(); else { const gio = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) { gio.disconnect(); start(); } }, { threshold: 0.35 }); gio.observe($('#lpStage', v)); gio.observe($('.lp-try-frame', v)); timers.push(setTimeout(() => {}, 0)); v._gio = gio; } }
+    else { imgs.forEach(i => { if (i.dataset.src) i.src = i.dataset.src; }); cap.hidden = true; v.classList.add('lp-lit'); }
     setT(t);
-    // scroll: the room sinks slower than the page, the nav steps aside, the story frames swap
-    const nav = $('.land-nav', v), stageEl = $('.hero-stage', v); let lastY = 0, raf = 0;
-    const onScroll = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; const y = window.scrollY; nav.classList.toggle('hide', y > lastY && y > 160); nav.classList.toggle('solid', y > 8); lastY = y; if (!reduce && y < innerHeight) { const f = $('#hpFrames', v); if (f) f.style.transform = `translateY(${y * 0.18}px) scale(1.04)`; } }); };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    const steps = $$('.story-steps li', v), frames = $$('.story-frame img', v);
-    const sio = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(x => { if (!x.isIntersecting) return; const k = +x.target.dataset.step; steps.forEach((s, i) => s.classList.toggle('on', i === k)); frames.forEach((f, i) => f.classList.toggle('on', i === k)); $('#storyRail', v).style.width = ((k + 1) / 4 * 100) + '%'; }), { rootMargin: '-45% 0px -45% 0px' }) : null;
-    if (sio) steps.forEach(s => sio.observe(s));
-    $$('.receipt div', v).forEach((d, i) => { d.dataset.rv = ''; d.style.setProperty('--i', i); });
-    const fromX = (x) => { const r = ruler.getBoundingClientRect(); return T0 + (x - r.left) / r.width * (T1 - T0); };
+    const fromX = (x) => { const r = ruler.getBoundingClientRect(); return (x - r.left) / r.width * 24; };
     ruler.addEventListener('pointerdown', e => { ruler.setPointerCapture(e.pointerId); setT(fromX(e.clientX)); ruler.onpointermove = ev => setT(fromX(ev.clientX)); });
     ruler.addEventListener('pointerup', () => ruler.onpointermove = null);
-    ruler.addEventListener('keydown', e => { const k = { ArrowRight: .25, ArrowUp: .25, ArrowLeft: -.25, ArrowDown: -.25, PageUp: 1, PageDown: -1 }[e.key]; if (k) { e.preventDefault(); setT(t + k); } if (e.key === 'Home') setT(T0); if (e.key === 'End') setT(23.9); });
+    ruler.addEventListener('keydown', e => { const k = { ArrowRight: .25, ArrowUp: .25, ArrowLeft: -.25, ArrowDown: -.25, PageUp: 1, PageDown: -1 }[e.key]; if (k) { e.preventDefault(); setT(t + k); } if (e.key === 'Home') setT(0); if (e.key === 'End') setT(23.9); });
     $$('.phase', v).forEach(b => b.onclick = () => { const m = ND.MOODS.find(x => x.id === b.dataset.mood); if (live) { live.atmos.warmth = m.warmth; live.atmos.lamps = m.lamps; } setT(m.time); });
-    const unReveal = reveal(v);
-    // changing the sofa finish reprices the room, as in the real budget screen
+
+    // the hero scene leans a little toward the cursor
+    const scene = $('#heroScene', v), stageEl = $('#lpStage', v);
+    const lean = (e) => { if (reduce) return; const r = stageEl.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; scene.style.setProperty('--mx', (x * -14).toFixed(1) + 'px'); scene.style.setProperty('--my', (y * -10).toFixed(1) + 'px'); };
+    stageEl.addEventListener('pointermove', lean); stageEl.addEventListener('pointerleave', () => { scene.style.setProperty('--mx', '0px'); scene.style.setProperty('--my', '0px'); });
+
+    // statement: words light up as it scrolls through
+    const words = $('#words', v); words.innerHTML = words.innerHTML.replace(/(<em>|<\/em>)|([^\s<>]+)/g, (m, tag, w) => tag ? tag : `<span class="w">${w}</span>`); const W = $$('.w', words);
+    // day: one pinned room, the time runs with the scroll
+    const day = $('#day', v), dayImgs = $$('.lp-day-imgs img', v), dayTxt = $$('.lp-day-txt > div', v), dayTime = $('#dayTime', v), sunDot = $('#sunDot', v), sunFill = $('#sunFill', v);
+    // story
+    const steps = $$('.lp-steps li', v), sframes = $$('.lp-story-frame img', v);
+    const sio = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(x => { if (!x.isIntersecting) return; const k = +x.target.dataset.step; steps.forEach((s, i) => s.classList.toggle('on', i === k)); sframes.forEach((f, i) => f.classList.toggle('on', i === k)); $('#storyRail', v).style.transform = `scaleX(${(k + 1) / 4})`; $('#storyN', v).textContent = `0${k + 1} / 04`; $('#storyBar', v).setAttribute('aria-valuenow', k + 1); }), { rootMargin: '-45% 0px -45% 0px' }) : null;
+    if (sio) steps.forEach(s => sio.observe(s));
+
+    const nav = $('#lpNav', v), copy = $('.lp-copy-main', v); let lastY = 0, raf = 0, dayK = -1;
+    const clamp = (x) => Math.max(0, Math.min(1, x));
+    const onScroll = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; const y = window.scrollY, vh = innerHeight;
+      nav.classList.toggle('hide', y > lastY && y > 200); nav.classList.toggle('solid', y > 8); lastY = y;
+      if (!reduce && y < vh * 1.2) { const k = clamp(y / vh); copy.style.transform = `translateY(${(k * -40).toFixed(1)}px)`; copy.style.opacity = (1 - k * 0.9).toFixed(3); stageEl.style.setProperty('--sy', (1 + k * 0.06).toFixed(4)); }
+      const wr = words.getBoundingClientRect(); const wp = clamp((vh * 0.88 - wr.top) / (vh * 0.62)); const lit = Math.round(wp * W.length * 1.05); W.forEach((w, i) => w.classList.toggle('lit', i < lit));
+      const dr = day.getBoundingClientRect(); const p = clamp(-dr.top / Math.max(1, dr.height - vh)); const seg = p * (DAY.length - 1), k = Math.min(DAY.length - 2, Math.floor(seg)), f0 = clamp((seg - k - 0.3) / 0.4), f = f0 * f0 * (3 - 2 * f0); const tt = DAY[k].t + (DAY[k + 1].t - DAY[k].t) * f;
+      dayTime.textContent = ND.fmtTime(tt); const pos = ((tt - 6) / 18 * 100).toFixed(2) + '%'; sunDot.style.left = pos; sunFill.style.width = pos;
+      const idx = k + (f > 0.5 ? 1 : 0); if (idx !== dayK) { dayK = idx; dayImgs.forEach((im, i) => im.classList.toggle('on', i === idx)); dayTxt.forEach((d, i) => d.classList.toggle('on', i === idx)); }
+    }); };
+    window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+    // styles carousel: buttons, drag, progress
+    const car = $('#car', v), bar = $('#carBar', v); const stepW = () => ((car.querySelector('.lp-tile') || {}).offsetWidth || 300) + 24;
+    $('#carPrev', v).onclick = () => car.scrollBy({ left: -stepW(), behavior: reduce ? 'auto' : 'smooth' }); $('#carNext', v).onclick = () => car.scrollBy({ left: stepW(), behavior: reduce ? 'auto' : 'smooth' });
+    const carBar = () => { const max = car.scrollWidth - car.clientWidth; const vis = car.clientWidth / car.scrollWidth; bar.style.width = (vis * 100) + '%'; bar.style.transform = `translateX(${max > 0 ? (car.scrollLeft / max) * ((1 - vis) / vis) * 100 : 0}%)`; };
+    car.addEventListener('scroll', carBar, { passive: true }); carBar(); addEventListener('resize', carBar);
+    let drag = null, moved = false;
+    car.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') return; drag = { x: e.clientX, s: car.scrollLeft }; moved = false; car.classList.add('drag'); });
+    window.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x; if (Math.abs(dx) > 5) moved = true; car.scrollLeft = drag.s - dx; });
+    const endDrag = () => { if (drag) { drag = null; car.classList.remove('drag'); } }; window.addEventListener('pointerup', endDrag);
+    car.addEventListener('click', e => { if (moved) { e.preventDefault(); moved = false; } }, true);
+
+    // pricing: changing the sofa finish reprices the room
     $$('.fin button', v).forEach(b => b.onclick = () => {
       $$('.fin button', v).forEach(x => x.setAttribute('aria-checked', String(x === b)));
       const seat = +b.dataset.price, total = seat + 2970;
-      $('#spSeat', v).textContent = money(seat); countUp($('#spTotal', v), total);
+      $('#spSeat', v).textContent = money(seat); countUp($('#spTotal', v), total); $('#spMeter', v).style.width = Math.min(100, total / 6000 * 100) + '%'; $('#spMeter', v).classList.toggle('over', total > 6000); const pc = Math.round(total / 6000 * 100); $('#spPct', v).textContent = pc + '% of budget'; $('#spBar', v).setAttribute('aria-valuenow', Math.min(100, pc));
       $('#spLeft', v).textContent = total > 6000 ? money(total - 6000) + ' over a ' + money(6000) + ' budget' : money(6000 - total) + ' under a ' + money(6000) + ' budget';
     });
-    $$('.wi-rooms a', v).forEach(l => { const on = () => { $$('.wi-rooms a', v).forEach(x => x.classList.toggle('on', x === l)); $$('.wi-frame img', v).forEach(im => im.classList.toggle('on', im.dataset.r === l.dataset.r)); }; l.addEventListener('pointerenter', on); l.addEventListener('focus', on); });
-    return () => { timers.forEach(clearTimeout); clearInterval(clockT); unReveal(); window.removeEventListener('scroll', onScroll); if (sio) sio.disconnect(); if (st.ok) { st.controls.autoRotate = false; st.off('frame'); st.controls.enableZoom = true; st.controls.enablePan = true; st.setMode('edit'); } };
+    $$('.lp-wi-rooms a', v).forEach(l => { const on = () => { $$('.lp-wi-rooms a', v).forEach(x => x.classList.toggle('on', x === l)); $$('.lp-wi-frame img', v).forEach(im => im.classList.toggle('on', im.dataset.r === l.dataset.r)); }; l.addEventListener('pointerenter', on); l.addEventListener('focus', on); });
+    const unReveal = reveal(v);
+    return () => { timers.forEach(clearTimeout); clearInterval(clockT); unReveal(); window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', carBar); window.removeEventListener('pointerup', endDrag); if (sio) sio.disconnect(); if (hostIO) hostIO.disconnect(); if (v._gio) v._gio.disconnect(); if (st.ok) { st.controls.autoRotate = false; st.off('frame'); st.controls.enableZoom = true; st.controls.enablePan = true; st.setMode('edit'); } };
   };
   function itemCostLocal(r) { const it = ND.itemById[r.item]; return ND.itemPrice(it, r.primary, r.scale); }
 
