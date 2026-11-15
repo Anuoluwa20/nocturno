@@ -9,10 +9,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..500;1,6..72,300..500&family=Instrument+Sans:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="css/app.css">
-<link rel="preload" as="image" href="img/K1-sketch-empty.webp">
+<link rel="preload" as="image" href="img/L1-dusk.webp" fetchpriority="high">
 </head>
 <body>
-<div id="app"><div class="boot"><header class="land-nav"><span class="logo" style="font-size:26px">NOCTURNE</span><span style="flex:1"></span><a class="btn sm" href="#signup">Start designing</a></header><section class="hero"><div class="hero-stage"></div><div class="hero-copy"><p class="label">Apartment &amp; workspace planner, in 3D</p><h1 class="display">Design your world <em>before</em> you live in it.</h1><p class="lede">Plan an apartment or a studio in 3D. Real furniture, real prices, and the light at any hour.</p></div></section></div></div>
+<div id="app"><div class="boot view">
+<header class="land-nav"><a class="logo" href="#home" aria-label="Nocturne, home"><span>N</span><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="moon" cx="50" cy="50" r="50"/></svg><svg viewBox="0 0 80 100" aria-hidden="true"><path d="M73.33 5.78A50 50 0 1 0 73.33 94.22A45 45 0 1 1 73.33 5.78Z" fill="currentColor"/></svg><span>T</span><span>U</span><span>R</span><span>N</span><span>E</span></a><span style="flex:1"></span><a class="btn sm" href="#signup">Start designing</a></header>
+<section class="hp"><div class="hp-frames" style="transform:none;inset:0"><img class="on" src="img/L1-dusk.webp" alt="A furnished living room at dusk with lamps on and the city outside" fetchpriority="high"></div><div class="hp-shade"></div>
+<div class="hp-copy"><p class="hp-meta">Apartment &amp; workspace planner <span>·</span> 3D</p><h1 class="display hp-title">Design your world <em>before</em> you live in it.</h1><p class="hp-lede">Plan an apartment or a studio in 3D, with real furniture, real prices and the light at any hour.</p><div class="hero-cta"><a class="btn btn-light" href="#signup">Create a free account</a></div></div></section>
+</div></div>
 <noscript><p style="padding:24px">NOCTURNE needs JavaScript to draw rooms in 3D.</p></noscript>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>

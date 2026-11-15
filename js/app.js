@@ -125,91 +125,86 @@
     const seq = [{ img: 'K1-sketch-empty', sk: true, cap: 'Draw the walls' }, { img: 'K2-sketch-furnished', sk: true, cap: 'Place the furniture' }, { img: 'K3-sketch-rendered', sk: true, cap: 'Choose the materials' }];
     v.innerHTML = `
 <a class="skip" href="#main">Skip to content</a>
-<header class="land-nav">${logo()}<span class="clock-chip d-only" id="clock"></span><span style="flex:1"></span><a class="nl" href="#how">How it works</a><a class="nl" href="#styles">Styles</a><a class="nl" href="#light">Light</a><a class="nl" href="#login">Sign in</a><a class="btn sm" href="#signup">Start designing</a></header>
+<header class="land-nav">${logo()}<span style="flex:1"></span><a class="nl" href="#how">How it works</a><a class="nl" href="#styles">Styles</a><a class="nl" href="#budget">Pricing</a><a class="nl" href="#login">Sign in</a><a class="btn sm" href="#signup">Start designing</a></header>
 <main id="main">
-<section class="hero">
-  <div class="hero-copy">
-    <p class="label">Apartment & workspace planner, in 3D</p>
-    <h1 class="display" aria-label="Design your world before you live in it."><span class="ln" style="--i:0" aria-hidden="true"><span>Design your world</span></span><span class="ln" style="--i:1" aria-hidden="true"><span><em>before</em> you live in it.</span></span></h1>
-    <p class="lede">Plan an apartment or a studio in 3D. Real furniture, real prices, and the light at any hour.</p>
-    <div class="hero-cta"><a class="btn" href="#signup">Create a free account</a><button class="link" id="trySample">Try the sample room</button></div>
-    
+<section class="hp" aria-label="Introduction">
+  <div class="hp-frames" id="hpFrames">${F.map((f, i) => `<img src="img/${f.img}.webp" alt="${i === 3 ? 'A furnished living room at dusk with lamps on and the city outside' : ''}" data-t="${f.t}" ${i === 3 ? 'class="on"' : ''}>`).join('')}</div>
+  <div class="hp-shade" aria-hidden="true"></div>
+  <div class="hp-copy">
+    <h1 class="display hp-title" aria-label="Design your world before you live in it."><span class="ln" style="--i:0" aria-hidden="true"><span>Design your world</span></span><span class="ln" style="--i:1" aria-hidden="true"><span><em>before</em> you live in it.</span></span></h1>
+    <p class="hp-lede">Plan an apartment or a studio in 3D, with real furniture, real prices and the light at any hour.</p>
+    <div class="hero-cta"><a class="btn btn-light" href="#signup">Create a free account</a><button class="hp-link" id="trySample">Try the sample room <span aria-hidden="true">→</span></button></div>
   </div>
+  <div class="hp-times" role="radiogroup" aria-label="See the room at another time">${F.map((f, i) => `<button type="button" role="radio" data-t="${f.t}" aria-checked="${i === 3}"><b class="num">${ND.fmtTime(f.t)}</b> ${ND.timeLabel(f.t)}</button>`).join('')}</div>
+</section>
+
+<section class="statement" data-rv><p>A room is more than its furniture. It is how the light moves through it.</p></section>
+
+<section class="hero try" id="try" aria-label="Live 3D room">
+  <div class="try-head"><h2 class="h1">Now make it yours.</h2><p class="lede">This is the planner itself. Drag to turn the room, and move the sun with the dial.</p></div>
+  <div class="try-frame">
   <div class="hero-stage">
     <div class="hero-frames" id="frames">${seq.map((s, i) => `<img class="sk${i === 0 ? ' on' : ''}" ${i === 0 ? 'src' : 'data-src'}="img/${s.img}.webp" alt="" data-k="${i}">`).join('')}${F.map((f, i) => `<img data-src="img/${f.img}.webp" alt="" data-t="${f.t}">`).join('')}<div class="hero-wash" id="wash"></div><div class="hero-live" id="live" aria-label="Live 3D sample room. Drag to turn it."></div><div class="tags" id="tags" aria-hidden="true"></div></div>
     <p class="hero-caption" id="heroCap"><b>01</b> · Draw the walls</p>
     <div class="dial dusk-dial-l"><div class="dial-head"><span class="label">Time of day</span><span class="dial-time" id="heroTime"></span></div>${phasesRow(true)}${track('heroRuler', 'Time of day in the sample room')}</div>
   </div>
+  </div>
 </section>
 
 <section class="land-sec" id="how">
-  <div class="land-sec-head" data-rv><span class="label">How it works</span><h2 class="h1">From a line drawing to a lit room.</h2><p class="lede">Every space opens furnished, so you start by changing things.</p></div>
+  <div class="ed-head" data-rv><h2 class="h1">From a line drawing<br>to a lit room.</h2><p class="lede">Every space opens furnished, so you start by changing things.</p></div>
   <div class="story">
-    <div class="story-pin"><div class="story-frame">${[['K1-sketch-empty', 'Line drawing of an empty room'], ['K2-sketch-furnished', 'The room drawn with a sofa, table and desk'], ['K3-sketch-rendered', 'The room shaded, with a wood floor'], ['L1-dusk', 'The finished room at dusk with a lamp on']].map(([f, alt], i) => `<img src="img/${f}.webp" alt="${alt}" class="${i === 0 ? 'on' : ''}${i < 3 ? ' sk' : ''}">`).join('')}</div><div class="story-rail" aria-hidden="true"><i id="storyRail"></i></div><div class="story-count"><b id="storyN">01</b><span>/ 04</span></div></div>
-    <ol class="story-steps">${[['Pick a layout.', 'Studio, one or two bedrooms, or a workspace on its own.'], ['Place the furniture.', 'Drag, rotate and resize. Everything snaps to 5 cm.'], ['Choose the materials.', 'Fabric, wood and walls change as you pick, and so does the price.'], ['Set the light.', 'Morning, noon or dusk. Lamps come on when it gets dark.']].map(([h, p], i) => `<li data-step="${i}" class="${i === 0 ? 'on' : ''}"><span class="st-no">${String(i + 1).padStart(2, '0')}</span><h3 class="h2">${h}</h3><p class="lede">${p}</p></li>`).join('')}</ol>
+    <div class="story-pin"><div class="story-frame">${[['K1-sketch-empty', 'Line drawing of an empty room'], ['K2-sketch-furnished', 'The room drawn with a sofa, table and desk'], ['K3-sketch-rendered', 'The room shaded, with a wood floor'], ['L4-golden-hour', 'The finished room in late afternoon light']].map(([f, alt], i) => `<img src="img/${f}.webp" alt="${alt}" class="${i === 0 ? 'on' : ''}${i < 3 ? ' sk' : ''}">`).join('')}</div><div class="story-rail" aria-hidden="true"><i id="storyRail"></i></div></div>
+    <ol class="story-steps">${[['Pick a layout.', 'Studio, one or two bedrooms, or a workspace on its own.'], ['Place the furniture.', 'Drag, rotate and resize. Everything snaps to 5 cm.'], ['Choose the materials.', 'Fabric, wood and walls change as you pick, and so does the price.'], ['Set the light.', 'Morning, noon or dusk. Lamps come on when it gets dark.']].map(([h, p], i) => `<li data-step="${i}" class="${i === 0 ? 'on' : ''}"><h3 class="h2">${h}</h3><p class="lede">${p}</p></li>`).join('')}</ol>
   </div>
 </section>
 
 <section class="land-sec" id="styles">
-  <div class="land-sec-head" data-rv><span class="label">Styles</span><h2 class="h1">Eight ways to furnish it.</h2><p class="lede">A style sets the walls, floor, fabric and wood in one step.</p></div>
-  <div class="style-cards">${ND.STYLES.map((s, i) => { const W = ND.WALLS.find(w => w.id === s.wall) || {}, F = ND.FLOORS[s.floor], FA = ND.MAT[s.fabric], WO = ND.MAT[s.wood];
-    return `<a class="mood" href="#signup" data-rv style="--i:${i % 4}" aria-label="${esc(s.name)}. Walls ${esc(W.name)}, floor ${esc(F.name)}, fabric ${esc(FA.name)}, wood ${esc(WO.name)}.">
-    <div class="mood-img"><img src="img/${s.img}.webp" alt="" loading="lazy">
-      <div class="mood-chips" aria-hidden="true"><i class="chip-wall" style="background:${W.color}"></i><i class="chip-floor" style="${F.tex ? `background-image:url(img/${F.tex}.webp)` : `background:${F.color}`}"></i><i class="chip-fab" style="background:${FA.color}"></i><i class="chip-wood" style="background:${WO.color}"></i></div></div>
-    <div class="mood-body"><div class="mood-title"><span class="mood-no">${String(i + 1).padStart(2, '0')}</span><h3>${esc(s.name)}</h3></div>
-      <dl class="mood-spec"><div><dt>Walls</dt><dd>${esc(W.name)}</dd></div><div><dt>Floor</dt><dd>${esc(F.name)}</dd></div><div><dt>Fabric</dt><dd>${esc(FA.name)}</dd></div><div><dt>Wood</dt><dd>${esc(WO.name)}</dd></div></dl>
-      <span class="mood-add"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></i>Use this style</span></div></a>`; }).join('')}</div>
-</section>
-
-<section class="land-sec" id="light">
-  <div class="land-sec-head" data-rv><span class="label">Light</span><h2 class="h1">The same room, five times a day.</h2><p class="lede">Move the sun. Lamps come on at dusk, and you set how warm they are.</p></div>
-  <div class="light-stage" data-rv>
-    <div class="ls-frame">${F.map((f, i) => `<img src="img/${f.img}.webp" alt="The same living room at ${ND.fmtTime(f.t)}, ${ND.timeLabel(f.t)}" loading="lazy" data-t="${f.t}" class="${i === 3 ? 'on' : ''}">`).join('')}<p class="ls-cap"><b class="num" id="lsTime">19:40</b> <em id="lsLabel">dusk</em></p></div>
-    <div class="ls-modes light-strip" role="radiogroup" aria-label="Time of day">${F.map((f, i) => `<button type="button" role="radio" data-t="${f.t}" aria-pressed="${i === 3}" aria-checked="${i === 3}">${phaseSVG([1, 4, 2, 3, 0][i])}<span><b class="num">${ND.fmtTime(f.t)}</b><em>${ND.timeLabel(f.t)}</em></span></button>`).join('')}</div>
-  </div>
+  <div class="caps-head" data-rv><h2 class="h1">Eight ways to furnish it.</h2><div class="car-nav"><button type="button" class="car-btn" id="carPrev" aria-label="Previous styles">←</button><button type="button" class="car-btn" id="carNext" aria-label="Next styles">→</button></div></div>
+  <div class="tiles">${ND.STYLES.map((s, i) => { const W = ND.WALLS.find(w => w.id === s.wall) || {}, F = ND.FLOORS[s.floor], WO = ND.MAT[s.wood];
+    return `<a class="tile t${i % 4}" href="#signup" data-rv style="--i:${i % 4}"><div class="tile-img"><img src="img/${s.img}.webp" alt="${esc(s.name)} living room"></div>
+    <h3 class="tile-name">${esc(s.name)}</h3><p class="tile-meta">${esc(W.name)} <span>|</span> ${esc(F.name)} <span>|</span> ${esc(WO.name)}</p></a>`; }).join('')}</div>
 </section>
 
 <section class="land-sec" id="budget">
-  <div class="budget-demo">
-    <div data-rv><span class="label">Budget</span><h2 class="h1" style="margin:16px 0 20px">Know what it costs.</h2><p class="lede">Set a figure for each room. Every piece is priced, and a cheaper finish is one tap away.</p></div>
-    <article class="spend" data-rv style="--i:1" aria-label="Example budget for a living room">
-      <header class="sp-head"><div><p class="label">Living room · example</p><div class="budget-big sp-total" id="spTotal" data-rv data-count="4860">${money(0)}</div><p class="sp-sub">of ${money(6000)} budget · <b id="spLeft">${money(1140)} left</b></p></div><span class="sp-state" id="spState">81% used</span></header>
-      <div class="sp-bar" role="img" id="spBar" aria-label="Spend by category"><span class="seg s1" style="--w:31.5%"></span><span class="seg s2" style="--w:21.7%"></span><span class="seg s3" style="--w:22.2%"></span><span class="seg s4" style="--w:5.7%"></span><b class="sp-limit" style="left:80%"><em>80%</em></b></div>
-      <ul class="sp-legend">
-        <li><i class="s1"></i><span>Seating<small>Curved sofa</small></span><span class="num" id="spSeat">${money(1890)}</span><span class="num sp-pct" id="spSeatP">39%</span></li>
-        <li><i class="s2"></i><span>Tables<small>Coffee table, desk</small></span><span class="num">${money(1300)}</span><span class="num sp-pct">27%</span></li>
-        <li><i class="s3"></i><span>Rugs<small>Wool, 240 × 170</small></span><span class="num">${money(1330)}</span><span class="num sp-pct">27%</span></li>
-        <li><i class="s4"></i><span>Lighting<small>Arched floor lamp</small></span><span class="num">${money(340)}</span><span class="num sp-pct">7%</span></li>
-      </ul>
-      <div class="sp-variants" role="radiogroup" aria-label="Sofa finish"><p class="label">Curved sofa · finish</p>
-        ${[['Ivory bouclé', '#E9E2D4', 1890], ['Stone linen', '#B7AFA3', 1795], ['Cognac leather', '#9A5A32', 2265]].map(([n, c, pr], k) => `<button type="button" class="sp-var" role="radio" aria-checked="${k === 0}" data-price="${pr}"><span class="n">${String(k + 1).padStart(2, '0')}</span><i style="background:${c}"></i><span>${n}</span><span class="num">${money(pr)}</span><span class="num d">${k === 0 ? 'Current' : (pr < 1890 ? '−' : '+') + money(Math.abs(pr - 1890))}</span></button>`).join('')}
-      </div>
-    </article>
+  <div class="priced" data-rv>
+    <figure class="priced-img"><img src="img/D1-studio-lisbon.webp" alt="A furnished studio apartment"><figcaption>Studio, 32 m². Example prices.</figcaption></figure>
+    <div class="priced-list">
+      <h2 class="h1">Know what<br>it costs.</h2>
+      <p class="lede">Every piece is priced. Change a finish and the total changes with it.</p>
+      <table class="basket"><tbody>
+        <tr><td>Curved sofa<span class="fin" role="radiogroup" aria-label="Sofa finish">${[['Ivory bouclé', 1890], ['Stone linen', 1795], ['Cognac leather', 2265]].map(([n, pr], k) => `<button type="button" role="radio" aria-checked="${k === 0}" data-price="${pr}">${n}</button>`).join('')}</span></td><td class="num" id="spSeat">${money(1890)}</td></tr>
+        <tr><td>Round coffee table<span>Oak</span></td><td class="num">${money(520)}</td></tr>
+        <tr><td>Writing desk<span>Oak</span></td><td class="num">${money(780)}</td></tr>
+        <tr><td>Arched floor lamp<span>Graphite</span></td><td class="num">${money(340)}</td></tr>
+        <tr><td>Wool rug<span>240 × 170 cm</span></td><td class="num">${money(1330)}</td></tr>
+      </tbody><tfoot><tr><td>Total<span id="spLeft">${money(1140)} under a ${money(6000)} budget</span></td><td class="num" id="spTotal">${money(4860)}</td></tr></tfoot></table>
+    </div>
   </div>
 </section>
 
 <section class="night-band"><div class="night-grid walk-index">
-  <div class="wi-frame" data-rv>${[['Living room', 'L1-dusk'], ['Bedroom', 'D3-quiet-bedroom'], ['Home office', 'C2-monitor']].map(([n, f], i) => `<img src="img/${f}.webp" alt="${n}" loading="lazy" class="${i === 0 ? 'on' : ''}" data-r="${i}">`).join('')}</div>
-  <div class="wi-text" data-rv style="--i:1"><span class="label">Walkthrough</span><h2 class="h1">Walk through it before you move.</h2><p class="lede" style="color:#C9C9C9">Step inside at eye height, one room at a time.</p>
-    <ol class="wi-rooms">${[['Living room', 'Sofa, desk corner, the window to the city.'], ['Bedroom', 'Low bed, paper lantern, blackout linen.'], ['Home office', 'Standing desk, task chair, morning light.']].map(([n, d], i) => `<li><a href="#signup" data-r="${i}" class="${i === 0 ? 'on' : ''}"><span class="wi-no">${['I', 'II', 'III'][i]}</span><span><b>${n}</b><small>${d}</small></span><span class="wi-enter">Enter</span></a></li>`).join('')}</ol>
+  <div class="wi-frame" data-rv>${[['Living room', 'L1-dusk'], ['Bedroom', 'D3-quiet-bedroom'], ['Home office', 'C2-monitor']].map(([n, f], i) => `<img src="img/${f}.webp" alt="${n}" class="${i === 0 ? 'on' : ''}" data-r="${i}">`).join('')}</div>
+  <div class="wi-text" data-rv style="--i:1"><h2 class="h1">Walk through it before you move.</h2><p class="lede" style="color:#C9C9C9">Step inside at eye height, one room at a time.</p>
+    <ol class="wi-rooms">${[['Living room', 'Sofa, desk corner, the window to the city.'], ['Bedroom', 'Low bed, paper lantern, blackout linen.'], ['Home office', 'Standing desk, task chair, morning light.']].map(([n, d], i) => `<li><a href="#signup" data-r="${i}" class="${i === 0 ? 'on' : ''}"><span><b>${n}</b><small>${d}</small></span><span class="wi-enter">Enter →</span></a></li>`).join('')}</ol>
   </div></div></section>
 </main>
 <footer class="foot2">
   <div class="f2-top"><p class="f2-cta"><span class="h2">Start with one room.</span><a class="btn" href="#signup">Create a free account</a></p>
-    <nav class="f2-links" aria-label="Footer"><div><p class="label">Product</p><a href="#how">How it works</a><a href="#styles">Styles</a><a href="#light">Light</a><a href="#budget">Budget</a></div><div><p class="label">Account</p><a href="#signup">Create account</a><a href="#login">Sign in</a></div></nav></div>
+    <nav class="f2-links" aria-label="Footer"><div><p class="label">Product</p><a href="#how">How it works</a><a href="#styles">Styles</a><a href="#budget">Pricing</a></div><div><p class="label">Account</p><a href="#signup">Create account</a><a href="#login">Sign in</a></div></nav></div>
   <div class="f2-mark" aria-hidden="true">${logo('f2-logo', '#home')}</div>
-  <div class="f2-base"><span>Prices are estimates, not live retail prices.</span><span class="num" id="fClock"></span></div>
+  <div class="f2-base"><span>Prices are estimates, not live retail prices.</span></div>
 </footer>`;
 
     // anchor links without changing the route
-    $$('a[href="#how"],a[href="#styles"],a[href="#light"],a[href="#budget"]', v).forEach(a => a.onclick = (e) => { e.preventDefault(); $(a.getAttribute('href'), v).scrollIntoView({ behavior: document.documentElement.classList.contains('reduce-motion') ? 'auto' : 'smooth' }); });
+    $$('a[href="#how"],a[href="#styles"],a[href="#budget"]', v).forEach(a => a.onclick = (e) => { e.preventDefault(); $(a.getAttribute('href'), v).scrollIntoView({ behavior: document.documentElement.classList.contains('reduce-motion') ? 'auto' : 'smooth' }); });
     $('#trySample', v).onclick = () => { intent = 'sample'; go('signup'); };
 
     // hero: the room opens as a line drawing, the camera moves in, then it lights up at dusk
     const imgs = $$('#frames img', v), cap = $('#heroCap', v), ruler = $('#heroRuler', v), tEl = $('#heroTime', v), wash = $('#wash', v);
     const T0 = 0, T1 = 24; let t = 19.67, timers = []; cap.hidden = true;
     const reduce = reduced() || matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const clock = $('#clock', v); const tick = () => { const d = new Date(), lt = d.getHours() + d.getMinutes() / 60; clock.innerHTML = `<b class="num">${ND.fmtTime(lt)}</b> ${ND.timeLabel(lt)}`; const fc = $('#fClock', v); if (fc) fc.textContent = ND.fmtTime(lt) + ' ' + ND.timeLabel(lt) + ' where you are'; }; tick(); const clockT = setInterval(tick, 30000);
+    const clockT = 0;
     const st = getStage(); let live = null, tagEls = [];
     if (st.ok) {
       live = NStore.newProject({ name: 'Hero', type: 'apartment', layout: 'studio', style: 'scandi' }); live.atmos.time = t; live.atmos.view = 'city-dusk';
@@ -220,13 +215,19 @@
     function drift() { if (reduce) return; st.controls.autoRotate = true; st.controls.autoRotateSpeed = 0.3; st.renderer.domElement.addEventListener('pointerdown', () => { st.controls.autoRotate = false; }, { once: true }); }
     function goLive() {
       st.mount($('#live', v)); st.setMode('view'); st.controls.enableZoom = false; st.controls.enablePan = false; st.setProject(live);
-      const r = live.rooms[0], tgt = new THREE.Vector3(r.w * 0.46, 0.2, r.d * 0.42), near = new THREE.Vector3(r.w * 0.92 + 2, 6.8, r.d + 7.6), far = new THREE.Vector3(r.w * 0.92 + 6.5, 11.5, r.d + 13);
+      const r = live.rooms[0], tgt = new THREE.Vector3(r.w * 0.46, 0.2, r.d * 0.42), near = new THREE.Vector3(r.w * 0.86 + 1, 5.4, r.d + 5.8), far = new THREE.Vector3(r.w * 0.92 + 6.5, 11.5, r.d + 13);
       $('#live', v).classList.add('on'); imgs.forEach(i => i.classList.remove('on'));
       if (reduce) { st.setLook('render'); st.flyTo(near, tgt, false); $('#tags', v).classList.add('on'); return; }
       st.setLook('sketch'); st.flyTo(far, tgt, false); st.camAnim = { p0: far.clone(), t0: tgt.clone(), p1: near, t1: tgt, s: performance.now(), d: 3600 };
       timers.push(setTimeout(() => { wash.classList.add('on'); timers.push(setTimeout(() => { st.setLook('render'); st.applyAtmos(); wash.classList.remove('on'); $('#tags', v).classList.add('on'); }, 400)); }, 1700));
       timers.push(setTimeout(drift, 3700));
     }
+    const hpImgs = $$('#hpFrames img', v);
+    function heroPhoto(tt) { const near = F.reduce((x, f) => Math.abs(f.t - tt) < Math.abs(x.t - tt) ? f : x, F[0]); hpImgs.forEach(im => im.classList.toggle('on', +im.dataset.t === near.t)); $$('.hp-times button', v).forEach(b => b.setAttribute('aria-checked', String(+b.dataset.t === near.t))); }
+    { const d = new Date(); heroPhoto(d.getHours() + d.getMinutes() / 60); }
+    $$('.hp-times button', v).forEach(b => b.onclick = () => heroPhoto(+b.dataset.t));
+    const car = $('.tiles', v); const step = () => (car.querySelector('.tile') || {}).offsetWidth + 24;
+    $('#carPrev', v).onclick = () => car.scrollBy({ left: -step(), behavior: reduce ? 'auto' : 'smooth' }); $('#carNext', v).onclick = () => car.scrollBy({ left: step(), behavior: reduce ? 'auto' : 'smooth' });
     function show(el) { imgs.forEach(i => i.classList.toggle('on', i === el)); }
     function setT(nt) {
       t = Math.max(T0, Math.min(T1 - 0.01, nt)); ruler.style.setProperty('--p', ((t - T0) / (T1 - T0) * 100) + '%'); tEl.innerHTML = ND.fmtTime(t) + ' <em>' + ND.timeLabel(t) + '</em>'; markPhase(v, t); ruler.setAttribute('aria-valuenow', t.toFixed(2)); ruler.setAttribute('aria-valuetext', ND.fmtTime(t) + ', ' + ND.timeLabel(t));
@@ -234,13 +235,15 @@
       if (live) { live.atmos.time = t; if (st.project === live) st.applyAtmos(); } else show(imgs.find(i => +i.dataset.t === near.t));
 
     }
-    if (live) goLive(); else imgs.forEach(i => { if (i.dataset.src) i.src = i.dataset.src; }); setT(t);
+    if (live) { const tio = 'IntersectionObserver' in window ? new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) { tio.disconnect(); goLive(); setT(t); } }, { rootMargin: '0px 0px -20% 0px' }) : null; if (tio) tio.observe($('#try', v)); else goLive(); }
+    else imgs.forEach(i => { if (i.dataset.src) i.src = i.dataset.src; });
+    setT(t);
     // scroll: the room sinks slower than the page, the nav steps aside, the story frames swap
     const nav = $('.land-nav', v), stageEl = $('.hero-stage', v); let lastY = 0, raf = 0;
-    const onScroll = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; const y = window.scrollY; nav.classList.toggle('hide', y > lastY && y > 160); nav.classList.toggle('solid', y > 8); lastY = y; if (!reduce && y < innerHeight * 1.2) stageEl.style.transform = `translateY(${y * 0.22}px)`; }); };
+    const onScroll = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; const y = window.scrollY; nav.classList.toggle('hide', y > lastY && y > 160); nav.classList.toggle('solid', y > 8); lastY = y; if (!reduce && y < innerHeight) { const f = $('#hpFrames', v); if (f) f.style.transform = `translateY(${y * 0.18}px) scale(1.04)`; } }); };
     window.addEventListener('scroll', onScroll, { passive: true });
     const steps = $$('.story-steps li', v), frames = $$('.story-frame img', v);
-    const sio = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(x => { if (!x.isIntersecting) return; const k = +x.target.dataset.step; steps.forEach((s, i) => s.classList.toggle('on', i === k)); frames.forEach((f, i) => f.classList.toggle('on', i === k)); $('#storyN', v).textContent = String(k + 1).padStart(2, '0'); $('#storyRail', v).style.width = ((k + 1) / 4 * 100) + '%'; }), { rootMargin: '-45% 0px -45% 0px' }) : null;
+    const sio = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(x => { if (!x.isIntersecting) return; const k = +x.target.dataset.step; steps.forEach((s, i) => s.classList.toggle('on', i === k)); frames.forEach((f, i) => f.classList.toggle('on', i === k)); $('#storyRail', v).style.width = ((k + 1) / 4 * 100) + '%'; }), { rootMargin: '-45% 0px -45% 0px' }) : null;
     if (sio) steps.forEach(s => sio.observe(s));
     $$('.receipt div', v).forEach((d, i) => { d.dataset.rv = ''; d.style.setProperty('--i', i); });
     const fromX = (x) => { const r = ruler.getBoundingClientRect(); return T0 + (x - r.left) / r.width * (T1 - T0); };
@@ -249,19 +252,14 @@
     ruler.addEventListener('keydown', e => { const k = { ArrowRight: .25, ArrowUp: .25, ArrowLeft: -.25, ArrowDown: -.25, PageUp: 1, PageDown: -1 }[e.key]; if (k) { e.preventDefault(); setT(t + k); } if (e.key === 'Home') setT(T0); if (e.key === 'End') setT(23.9); });
     $$('.phase', v).forEach(b => b.onclick = () => { const m = ND.MOODS.find(x => x.id === b.dataset.mood); if (live) { live.atmos.warmth = m.warmth; live.atmos.lamps = m.lamps; } setT(m.time); });
     const unReveal = reveal(v);
-    // the example spend block reacts to a finish change, like the real budget screen
-    $$('.sp-var', v).forEach(b => b.onclick = () => {
-      $$('.sp-var', v).forEach(x => x.setAttribute('aria-checked', String(x === b)));
-      const seat = +b.dataset.price, total = seat + 2970, pct = total / 6000;
-      countUp($('#spTotal', v), total); $('#spSeat', v).textContent = money(seat); $('#spSeatP', v).textContent = Math.round(seat / total * 100) + '%';
-      $('#spLeft', v).textContent = pct > 1 ? money(total - 6000) + ' over' : money(6000 - total) + ' left';
-      $('.sp-bar .s1', v).style.setProperty('--w', (seat / 6000 * 100).toFixed(1) + '%');
-      const st = $('#spState', v); st.textContent = Math.round(pct * 100) + '% used'; st.dataset.s = pct > 1 ? 'over' : pct >= 0.8 ? 'warn' : 'ok';
+    // changing the sofa finish reprices the room, as in the real budget screen
+    $$('.fin button', v).forEach(b => b.onclick = () => {
+      $$('.fin button', v).forEach(x => x.setAttribute('aria-checked', String(x === b)));
+      const seat = +b.dataset.price, total = seat + 2970;
+      $('#spSeat', v).textContent = money(seat); countUp($('#spTotal', v), total);
+      $('#spLeft', v).textContent = total > 6000 ? money(total - 6000) + ' over a ' + money(6000) + ' budget' : money(6000 - total) + ' under a ' + money(6000) + ' budget';
     });
-    $('#spState', v).dataset.s = 'warn';
     $$('.wi-rooms a', v).forEach(l => { const on = () => { $$('.wi-rooms a', v).forEach(x => x.classList.toggle('on', x === l)); $$('.wi-frame img', v).forEach(im => im.classList.toggle('on', im.dataset.r === l.dataset.r)); }; l.addEventListener('pointerenter', on); l.addEventListener('focus', on); });
-    function lightTo(tt) { $$('.ls-frame img', v).forEach(im => im.classList.toggle('on', +im.dataset.t === tt)); $$('.ls-modes button', v).forEach(b => { const on = +b.dataset.t === tt; b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-checked', String(on)); }); $('#lsTime', v).textContent = ND.fmtTime(tt); $('#lsLabel', v).textContent = ND.timeLabel(tt); }
-    $$('.ls-modes button', v).forEach(b => b.onclick = () => lightTo(+b.dataset.t));
     return () => { timers.forEach(clearTimeout); clearInterval(clockT); unReveal(); window.removeEventListener('scroll', onScroll); if (sio) sio.disconnect(); if (st.ok) { st.controls.autoRotate = false; st.off('frame'); st.controls.enableZoom = true; st.controls.enablePan = true; st.setMode('edit'); } };
   };
   function itemCostLocal(r) { const it = ND.itemById[r.item]; return ND.itemPrice(it, r.primary, r.scale); }
