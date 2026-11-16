@@ -17,7 +17,7 @@
   }
   const SKY = [[0, '#0F1120'], [4.5, '#151628'], [6, '#4A3F5E'], [7, '#D9C3B8'], [9, '#CFDCE3'], [12, '#DCE6EC'], [16, '#E6D8BE'], [17.6, '#F0B977'], [18.8, '#C98C7A'], [19.7, '#8C7FAE'], [20.8, '#3A3560'], [22, '#171828'], [24, '#0F1120']];
   const SUN_COL = [[5, '#FF9A5A'], [7, '#FFC79A'], [10, '#FFF2E2'], [14, '#FFF6EA'], [17, '#FFC27A'], [18.8, '#FF8C55'], [20, '#FF8C55']];
-  const AMB = [[0, 0.06], [5, 0.08], [7, 0.45], [11, 0.75], [15, 0.7], [17.5, 0.5], [19, 0.3], [20.5, 0.14], [24, 0.06]];
+  const AMB = [[0, 0.1], [5, 0.11], [7, 0.45], [11, 0.75], [15, 0.7], [17.5, 0.5], [19, 0.32], [20.5, 0.17], [24, 0.1]];
   const VIEW_TINT = [[0, '#1C1D2E'], [5, '#2B2840'], [7, '#C8B8B4'], [10, '#FFFFFF'], [16, '#FFF2DE'], [18, '#F2B07A'], [19.7, '#8B7FA8'], [21, '#2E2C48'], [24, '#1C1D2E']];
 
   function kelvinToColor(k) { // 1800–6500 K approximation
@@ -31,11 +31,11 @@
     const id = key + JSON.stringify(opts);
     if (matCache[id]) return matCache[id];
     const m = ND.MAT[key] || { color: key, rough: 0.7 };
-    const mm = new T.MeshStandardMaterial({ color: C(m.color), roughness: m.rough ?? 0.7, metalness: m.metal || 0, ...opts });
+    const mm = new T.MeshStandardMaterial({ color: C(m.color).convertSRGBToLinear(), roughness: m.rough ?? 0.7, metalness: m.metal || 0, ...opts });
     mm.userData.key = key;
     return (matCache[id] = mm);
   }
-  const plainMat = (hex, rough = 0.8, extra = {}) => new T.MeshStandardMaterial({ color: C(hex), roughness: rough, ...extra });
+  const plainMat = (hex, rough = 0.8, extra = {}) => new T.MeshStandardMaterial({ color: C(hex).convertSRGBToLinear(), roughness: rough, ...extra });
 
   // ---------- geometry helpers ----------
   function box(g, w, h, d, m, x, y, z) { const me = new T.Mesh(new T.BoxGeometry(w, h, d), m); me.position.set(x, y, z); me.castShadow = me.receiveShadow = true; g.add(me); return me; }
@@ -168,6 +168,8 @@
       Object.assign(this.sun.shadow.mapSize, { width: 2048, height: 2048 }); this.sun.shadow.bias = -0.0004; this.sun.shadow.normalBias = 0.02;
       this.scene.add(this.sun, this.sun.target);
       this.fill = new T.AmbientLight(0xffffff, 0.08); this.scene.add(this.fill);
+      // a soft light that travels with the camera, so finishes always read in their true colour
+      this.head = new T.DirectionalLight(0xffffff, 0.3); this.head.position.set(0.4, 0.6, 1); this.headT = new T.Object3D(); this.headT.position.set(0, 0, -5); this.camera.add(this.head, this.headT); this.head.target = this.headT; this.scene.add(this.camera);
 
       this.world = new T.Group(); this.scene.add(this.world);
       this.itemsGroup = new T.Group(); this.scene.add(this.itemsGroup);
@@ -358,6 +360,7 @@
       const amb = keyed(AMB, t);
       this.hemi.intensity = amb * 0.9; this.hemi.color = keyed(SKY, t).lerp(C('#FFFFFF'), 0.5); this.hemi.groundColor = C('#8A7A66');
       this.fill.intensity = 0.05 + amb * 0.15;
+      if (this.head) this.head.intensity = 0.14 + (1 - Math.min(1, amb / 0.6)) * 0.2;
       const dark = 1 - Math.min(1, amb / 0.6);
       const lampsOn = A.lamps === 'on' || (A.lamps === 'auto' && (t < 7.5 || t > 17.8));
       const lampCol = kelvinToColor(A.warmth || 2700);

@@ -212,6 +212,8 @@
         I.dataset.room = room.id;
       }
       I.innerHTML = tabs + h; A.lazyThumbs(I); paintRooms(); paintCtx();
+      // swatches become labelled tiles: a large colour chip and its name, so a choice is easy to see and compare
+      $$('.swatch', I).forEach(b => { if (b.classList.contains('tile')) return; const chip = document.createElement('i'); chip.className = 'chip'; chip.setAttribute('style', b.getAttribute('style') || ''); b.removeAttribute('style'); const nm = (b.getAttribute('aria-label') || b.title || '').split(',')[0]; const lab = document.createElement('span'); lab.className = 'sw-n'; lab.textContent = nm; b.textContent = ''; b.append(chip, lab); b.classList.add('tile'); });
       $$('[data-tab]', I).forEach(b => b.onclick = () => { inspTab = b.dataset.tab; paintInsp(); });
       const ix = $('#inspX', I); if (ix) ix.onclick = () => setPanel('insp', false);
       if (inspTab === 'item' && rec) bindItem(I, rec); else if (inspTab === 'light') bindLight(I); else bindRoom(I);
@@ -308,27 +310,59 @@
   // ============ 12 BUDGET ============
   routes.budget = (v) => {
     const p = needProject(); if (!p) return;
+    let openRep = null, roomF = 'all', first = true;
+    const save = () => NStore.saveProject(p);
     function paint() {
       const c = costs(p);
-      // cheapest material swap per piece
-      const swaps = p.items.map(rec => { const it = ND.itemById[rec.item]; const cheapest = it.primaryOpts.reduce((a, b) => ND.itemPrice(it, a, rec.scale) <= ND.itemPrice(it, b, rec.scale) ? a : b); const save = itemCost(rec) - ND.itemPrice(it, cheapest, rec.scale); return { rec, it, cheapest, save }; }).filter(s => s.save > 0).sort((a, b) => b.save - a.save).slice(0, 4);
-      v.innerHTML = `${A.topbar('')}<main class="page" id="main"><div class="page-head"><p class="label"><a href="#editor">${esc(p.name)}</a> · Budget overview</p><h1 class="h1">Budget</h1><a class="btn ghost" href="#editor">${ic('back', 16)} Back to the room</a></div>
-<div class="two-col"><div>
-<div style="display:flex;align-items:baseline;gap:24px;flex-wrap:wrap;margin-bottom:12px"><span class="budget-big" id="bbig" style="${c.over ? 'color:var(--danger)' : ''}">${money(c.spent)}</span><span class="lede">of ${money(c.budget)} · <b>${c.over ? money(-c.left) + ' over' : money(c.left) + ' left'}</b></span></div>
-<div class="meter ${c.over ? 'over' : c.pct >= 0.8 ? 'warn' : ''}" style="margin-bottom:56px" role="img" aria-label="${Math.round(c.pct * 100)} percent of budget used"><i style="width:${Math.min(100, c.pct * 100)}%"></i></div>
-<h2 class="h3" style="margin-bottom:8px">By room</h2>
-${c.rooms.map(r => `<div class="room-budget"><div><b>${esc(r.room.name)}</b><div class="small muted num">${money(r.spent)} spent · ${r.items.length} pieces</div></div><div><div class="meter ${r.spent > r.room.budget ? 'over' : r.spent >= r.room.budget * 0.8 ? 'warn' : ''}"><i style="width:${Math.min(100, r.spent / (r.room.budget || 1) * 100)}%"></i></div><span class="small" style="color:${r.spent > r.room.budget ? 'var(--danger)' : r.spent >= r.room.budget * 0.8 ? 'var(--ink)' : 'var(--ink-3)'}">${r.spent > r.room.budget ? 'Over by ' + money(r.spent - r.room.budget) : Math.round(r.spent / (r.room.budget || 1) * 100) + '% used' + (r.spent >= r.room.budget * 0.8 ? ' · close to the limit' : '')}</span></div><label class="sr" for="rb${r.room.id}">${esc(r.room.name)} budget</label><span class="money-in"><span aria-hidden="true">${money(0).replace(/[\d.,\s]/g, '')}</span><input class="input num" id="rb${r.room.id}" data-rb="${r.room.id}" type="number" min="0" step="50" value="${r.room.budget}"></span></div>`).join('')}
-<h2 class="h3" style="margin:56px 0 8px">Every piece</h2>
-<table class="btable"><thead><tr><th>Piece</th><th class="hide-m">Room</th><th class="hide-m">Material</th><th class="r">Price</th></tr></thead><tbody>${c.rooms.flatMap(r => r.items.map(x => { const it = ND.itemById[x.rec.item]; return `<tr><td>${esc(it.name)}${it.scalable && x.rec.scale !== 1 ? ` <span class="muted small">· ${len(it.w * x.rec.scale)} wide</span>` : ''}</td><td class="hide-m muted">${esc(r.room.name)}</td><td class="hide-m muted">${esc(ND.MAT[x.rec.primary].name)}</td><td class="r">${money(x.cost)}</td></tr>`; })).join('') || '<tr><td colspan="4" class="muted">No pieces yet.</td></tr>'}</tbody><tfoot><tr><td>Total</td><td class="hide-m"></td><td class="hide-m"></td><td class="r">${money(c.spent)}</td></tr></tfoot></table>
-</div><aside style="display:grid;gap:24px;align-content:start">
-<div style="border:1px solid ${c.over ? 'var(--danger)' : 'var(--rule)'};padding:20px;display:grid;gap:8px"><span class="label" style="${c.over ? 'color:var(--danger)' : c.pct >= 0.8 ? 'color:var(--ink)' : ''}">${c.over ? 'Over budget' : c.pct >= 0.8 ? Math.round(c.pct * 100) + '% used' : 'On track'}</span><p>${c.over ? `Swap a finish or raise a room's budget to close the ${money(-c.left)} gap.` : `${money(c.left)} left to spend across ${p.rooms.length} room${p.rooms.length > 1 ? 's' : ''}.`}</p></div>
-<div><h2 class="h3" style="margin-bottom:8px">Swap for less</h2>${swaps.length ? `<div class="quick">${swaps.map((s, i) => `<button data-sw="${i}"><span>${esc(s.it.name)} in ${esc(ND.MAT[s.cheapest].name)}</span><span class="num" style="color:var(--ok)">−${money(s.save)}</span></button>`).join('')}</div><p class="small muted" style="margin-top:8px">Saves ${money(swaps.reduce((a, s) => a + s.save, 0))} in total.</p>` : '<p class="small muted">Every piece is already in its least expensive finish.</p>'}</div>
-<button class="btn ghost" id="csv">${ic('download', 16)} Download shopping list (.csv)</button></aside></div></main>`;
-      $$('[data-rb]', v).forEach(inp => inp.onchange = () => { const n = Math.max(0, Math.round(+inp.value || 0)); p.rooms.find(r => r.id === inp.dataset.rb).budget = n; NStore.saveProject(p); paint(); toast('Budget updated'); $('#rb' + inp.dataset.rb, v).focus(); });
-      $$('[data-sw]', v).forEach(b => b.onclick = () => { const s = swaps[+b.dataset.sw]; const old = s.rec.primary; s.rec.primary = s.cheapest; NStore.saveProject(p); paint(); toast('Switched to ' + ND.MAT[s.cheapest].name + ' · saved ' + money(s.save), { action: () => { s.rec.primary = old; NStore.saveProject(p); paint(); } }); });
+      const swaps = p.items.map(rec => { const it = ND.itemById[rec.item]; const cheapest = it.primaryOpts.reduce((a, b) => ND.itemPrice(it, a, rec.scale) <= ND.itemPrice(it, b, rec.scale) ? a : b); const sv = itemCost(rec) - ND.itemPrice(it, cheapest, rec.scale); return { rec, it, cheapest, save: sv }; }).filter(x => x.save > 0).sort((a, b) => b.save - a.save).slice(0, 4);
+      const could = swaps.reduce((a, x) => a + x.save, 0);
+      const scale = Math.max(c.spent, c.budget) || 1, fill = c.spent / scale * 100, mark = c.budget / scale * 100;
+      const meter = (spent, budget, big) => { const sc2 = Math.max(spent, budget) || 1; const st2 = spent > budget ? 'over' : spent >= budget * 0.8 ? 'warn' : ''; return `<div class="bmeter ${st2} ${big ? 'big' : ''}" role="progressbar" aria-valuemin="0" aria-valuemax="${budget}" aria-valuenow="${Math.round(spent)}" aria-label="Spent ${money(spent)} of ${money(budget)}"><i style="width:${(spent / sc2 * 100).toFixed(1)}%${spent > budget ? `;background:linear-gradient(90deg,var(--ink) 0 ${(budget / spent * 100).toFixed(1)}%,var(--danger) ${(budget / spent * 100).toFixed(1)}%)` : ''}"></i>${spent > budget ? `<b style="left:${(budget / sc2 * 100).toFixed(1)}%" title="Budget"></b>` : ''}</div>`; };
+      const rooms = c.rooms.filter(r => roomF === 'all' || r.room.id === roomF);
+      v.innerHTML = `${A.topbar('')}<main class="page bud" id="main"><div class="page-head"><p class="label"><a href="#editor">${esc(p.name)}</a> · Budget</p><h1 class="h1">Budget</h1><a class="btn ghost" href="#editor">${ic('back', 16)} Back to the room</a></div>
+<section class="bud-sum ${c.over ? 'is-over' : ''}">
+  <div class="bud-fig"><span class="label">Spent so far</span><span class="budget-big num" id="bbig">${money(c.spent)}</span>
+    ${meter(c.spent, c.budget, true)}
+    <div class="bud-scale num"><span>${money(0)}</span><span>${c.over ? `Budget ${money(c.budget)} · ${money(-c.left)} over` : `${Math.round(c.pct * 100)}% of ${money(c.budget)}`}</span></div></div>
+  <div class="bud-stats">
+    <div><span class="label">${c.over ? 'Over by' : 'Left to spend'}</span><b class="num ${c.over ? 'neg' : ''}">${money(Math.abs(c.left))}</b></div>
+    <div><span class="label">Pieces</span><b class="num">${p.items.length}</b></div>
+    <div><span class="label">Could save</span><b class="num pos">${money(could)}</b></div>
+  </div>
+</section>
+<div class="bud-grid"><div>
+<div class="bud-h"><h2 class="h3">Rooms</h2><span class="small muted">Set a budget for each room.</span></div>
+<div class="bud-rooms">${c.rooms.map(r => `<div class="bud-room"><div class="bud-room-top"><b>${esc(r.room.name)}</b><span class="small muted num">${r.items.length} pieces</span></div>
+  <div class="bud-room-fig"><span class="num">${money(r.spent)}</span><label class="money-in"><span class="sr">${esc(r.room.name)} budget</span><span aria-hidden="true">of</span><input class="input num" id="rb${r.room.id}" data-rb="${r.room.id}" type="number" min="0" step="50" value="${r.room.budget}"></label></div>
+  ${meter(r.spent, r.room.budget)}<span class="bud-room-st ${r.spent > r.room.budget ? 'neg' : ''}">${r.spent > r.room.budget ? 'Over by ' + money(r.spent - r.room.budget) : money(r.room.budget - r.spent) + ' left'}</span></div>`).join('')}</div>
+
+<div class="bud-h"><h2 class="h3">Every piece</h2>${p.rooms.length > 1 ? `<div class="bud-tabs" role="tablist">${[['all', 'All rooms'], ...p.rooms.map(r => [r.id, r.name])].map(([id, n]) => `<button role="tab" aria-selected="${roomF === id}" data-rf="${id}">${esc(n)}</button>`).join('')}</div>` : ''}</div>
+${rooms.map(r => `<div class="bud-group"><p class="label">${esc(r.room.name)} · <span class="num">${money(r.spent)}</span></p>${r.items.length ? r.items.map(x => { const it = ND.itemById[x.rec.item]; const alts = ND.ITEMS.filter(o => o.cat === it.cat && o.id !== it.id);
+  return `<div class="bud-item ${openRep === x.rec.uid ? 'open' : ''}" data-uid="${x.rec.uid}">
+    <div class="bud-row"><img class="bud-th" data-thumb="${it.id}" data-mat="${x.rec.primary}" alt="">
+      <div class="bud-info"><b>${esc(it.name)}</b><span class="small muted">${esc(it.cat)}${it.scalable && x.rec.scale !== 1 ? ' · ' + len(it.w * x.rec.scale) + ' wide' : ''}</span></div>
+      <label class="bud-fin"><span class="sr">Finish</span><i style="background:${ND.MAT[x.rec.primary].color}"></i><select data-fin="${x.rec.uid}">${it.primaryOpts.map(k => `<option value="${k}" ${k === x.rec.primary ? 'selected' : ''}>${esc(ND.MAT[k].name)} · ${money(ND.itemPrice(it, k, x.rec.scale))}</option>`).join('')}</select></label>
+      <b class="bud-price num">${money(x.cost)}</b>
+      <div class="bud-acts">${alts.length ? `<button class="bud-btn" data-rep="${x.rec.uid}" aria-expanded="${openRep === x.rec.uid}">${ic('swap', 15)}<span>Replace</span></button>` : ''}<button class="bud-btn del" data-del="${x.rec.uid}" aria-label="Remove ${esc(it.name)}">${ic('x', 15)}<span>Remove</span></button></div></div>
+    ${openRep === x.rec.uid ? `<div class="bud-alts"><p class="small muted">Other ${esc(it.cat.toLowerCase())} that fit the same spot</p><div class="bud-alt-grid">${alts.map(o => { const pr = ND.itemPrice(o, o.primaryOpts.includes(x.rec.primary) ? x.rec.primary : o.primary, 1); const d = pr - x.cost; return `<button class="bud-alt" data-to="${o.id}" data-for="${x.rec.uid}"><img data-thumb="${o.id}" alt=""><span class="n">${esc(o.name)}</span><span class="p num">${money(pr)} <em class="${d > 0 ? 'neg' : 'pos'}">${d > 0 ? '+' : '−'}${money(Math.abs(d))}</em></span></button>`; }).join('')}</div></div>` : ''}
+  </div>`; }).join('') : `<p class="small muted bud-empty">Nothing in this room yet. <a href="#editor">Add furniture</a></p>`}</div>`).join('')}
+</div><aside class="bud-side">
+<div class="bud-state ${c.over ? 'over' : c.pct >= 0.8 ? 'warn' : ''}"><span class="label">${c.over ? 'Over budget' : c.pct >= 0.8 ? Math.round(c.pct * 100) + '% used' : 'On track'}</span><p>${c.over ? `Swap a finish, replace a piece or raise a room's budget to close the ${money(-c.left)} gap.` : `${money(c.left)} left to spend across ${p.rooms.length} room${p.rooms.length > 1 ? 's' : ''}.`}</p></div>
+<div class="bud-card"><h2 class="h3">Swap for less</h2>${swaps.length ? `<div class="bud-swaps">${swaps.map((x, i) => `<button data-sw="${i}"><i style="background:${ND.MAT[x.cheapest].color}"></i><span>${esc(x.it.name)}<small>in ${esc(ND.MAT[x.cheapest].name)}</small></span><b class="num pos">−${money(x.save)}</b></button>`).join('')}</div><button class="btn sm ghost" id="swAll" style="width:100%">Apply all · save ${money(could)}</button>` : '<p class="small muted">Every piece is already in its least expensive finish.</p>'}</div>
+<button class="btn ghost" id="csv" style="width:100%">${ic('download', 16)} Download shopping list (.csv)</button></aside></div></main>`;
+      A.lazyThumbs(v);
+      $$('[data-rb]', v).forEach(inp => inp.onchange = () => { const n = Math.max(0, Math.round(+inp.value || 0)); p.rooms.find(r => r.id === inp.dataset.rb).budget = n; save(); paint(); toast('Budget updated'); });
+      $$('[data-rf]', v).forEach(b => b.onclick = () => { roomF = b.dataset.rf; paint(); });
+      $$('[data-fin]', v).forEach(sel => sel.onchange = () => { const rec = p.items.find(i => i.uid === sel.dataset.fin); const before = itemCost(rec); rec.primary = sel.value; save(); paint(); const d = itemCost(rec) - before; toast(ND.MAT[rec.primary].name + (d ? ' · ' + (d > 0 ? '+' : '−') + money(Math.abs(d)) : '')); });
+      $$('[data-rep]', v).forEach(b => b.onclick = () => { openRep = openRep === b.dataset.rep ? null : b.dataset.rep; paint(); });
+      $$('[data-to]', v).forEach(b => b.onclick = () => { const rec = p.items.find(i => i.uid === b.dataset.for); const old = JSON.stringify(rec); const was = ND.itemById[rec.item].name; const o = ND.itemById[b.dataset.to]; rec.item = o.id; rec.primary = o.primaryOpts.includes(rec.primary) ? rec.primary : o.primary; rec.secondary = o.secondary; rec.scale = 1; openRep = null; save(); paint(); toast(was + ' replaced with ' + o.name, { action: () => { Object.assign(rec, JSON.parse(old)); save(); paint(); } }); });
+      $$('[data-del]', v).forEach(b => b.onclick = () => { const i = p.items.findIndex(x => x.uid === b.dataset.del); if (i < 0) return; const [rec] = p.items.splice(i, 1); save(); paint(); toast(ND.itemById[rec.item].name + ' removed · −' + money(itemCost(rec)), { action: () => { p.items.splice(i, 0, rec); save(); paint(); } }); });
+      $$('[data-sw]', v).forEach(b => b.onclick = () => { const x = swaps[+b.dataset.sw]; const old = x.rec.primary; x.rec.primary = x.cheapest; save(); paint(); toast('Switched to ' + ND.MAT[x.cheapest].name + ' · saved ' + money(x.save), { action: () => { x.rec.primary = old; save(); paint(); } }); });
+      const sa = $('#swAll', v); if (sa) sa.onclick = () => { const olds = swaps.map(x => [x.rec, x.rec.primary]); swaps.forEach(x => { x.rec.primary = x.cheapest; }); save(); paint(); toast('Saved ' + money(could), { action: () => { olds.forEach(([r, k]) => { r.primary = k; }); save(); paint(); } }); };
       $('#csv', v).onclick = () => A.saveFile(slug(p.name) + '-shopping-list.csv', shoppingCSV(p), 'text/csv');
+      if (first) { first = false; A.countUp($('#bbig', v), c.spent); }
     }
-    paint(); A.countUp($('#bbig', v), costs(p).spent);
+    paint();
   };
   const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'nocturne';
   function shoppingCSV(p) {
