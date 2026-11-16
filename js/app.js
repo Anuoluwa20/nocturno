@@ -136,7 +136,7 @@
     const STEPS = [['Pick a layout.', 'Studio, one or two bedrooms, or a workspace on its own.'], ['Place the furniture.', 'Drag, rotate and resize. Everything snaps to 5 cm.'], ['Choose the materials.', 'Fabric, wood and walls change as you pick, and so does the price.'], ['Set the light.', 'Morning, noon or dusk. Lamps come on when it gets dark.']];
     const SKETCH = [['K1-sketch-empty', 'Line drawing of an empty room'], ['K2-sketch-furnished', 'The room drawn with a sofa, table and desk'], ['K3-sketch-rendered', 'The room shaded, with a wood floor'], ['L4-golden-hour', 'The finished room in late afternoon light']];
     const roman = ['I', 'II', 'III'];
-    const head = (i, title, lede, extra = '') => `<div class="lp-head" data-rv><span class="lp-idx num">${String(i).padStart(2, '0')}</span><h2 class="lp-h">${title}</h2><div class="lp-head-r">${lede ? `<p class="lp-p">${lede}</p>` : ''}${extra}</div></div>`;
+    const head = (i, title, lede, extra = '') => `<div class="lp-head" data-rv><h2 class="lp-h">${title}</h2><div class="lp-head-r">${lede ? `<p class="lp-p">${lede}</p>` : ''}${extra}</div></div>`;
     v.innerHTML = `
 <a class="skip" href="#main">Skip to content</a>
 <header class="lp-nav" id="lpNav">${logo()}<nav class="lp-links" aria-label="Sections"><a href="#how">How it works</a><a href="#styles">Styles</a><a href="#budget">Pricing</a></nav><span class="lp-clock" id="lpClock" aria-hidden="true"></span><a class="lp-in" href="#login">Sign in</a><a class="btn sm" href="#signup">Start designing</a></header>
@@ -144,7 +144,7 @@
 <section class="lp-hero" aria-label="Introduction">
   <div class="lp-copy">
     <div class="lp-copy-main">
-      <p class="lp-eyebrow"><span class="num">N°01</span><span>Apartment &amp; workspace planner</span></p>
+      <p class="lp-eyebrow"><span>Apartment &amp; workspace planner</span></p>
       <h1 class="lp-title" aria-label="Design your world before you live in it."><span class="ln" aria-hidden="true"><span>Design your world</span></span><span class="ln" aria-hidden="true"><span><em>before</em> you</span></span><span class="ln" aria-hidden="true"><span>live in it.</span></span></h1>
       <p class="lp-lede">Plan an apartment or a studio in 3D, with real furniture, real prices and the light at any hour.</p>
       <div class="lp-cta"><a class="btn" href="#signup">Create a free account</a><button type="button" class="lp-link" id="trySample">Try the sample room <span aria-hidden="true">→</span></button></div>
@@ -170,7 +170,7 @@
     <div class="lp-day-imgs">${DAY.map((d, i) => `<img src="img/${d.img}.webp" alt="${i === 0 ? 'The same living room shown at five times of day' : ''}" class="${i === 0 ? 'on' : ''}">`).join('')}</div>
     <div class="lp-day-shade" aria-hidden="true"></div>
     <div class="lp-day-in">
-      <p class="lp-day-label"><span class="num">01</span>One room, five times a day</p>
+      <p class="lp-day-label">One room, five times a day</p>
       <div class="lp-day-copy"><p class="lp-day-time num" id="dayTime">07:00</p><div class="lp-day-txt">${DAY.map((d, i) => `<div class="${i === 0 ? 'on' : ''}"><h3>${d.h}</h3><p>${d.p}</p></div>`).join('')}</div></div>
       <div class="lp-sun" aria-hidden="true"><div class="lp-sun-line"><i id="sunFill"></i><b id="sunDot"></b></div><div class="lp-sun-ticks">${DAY.map(d => `<span style="left:${((d.t - 6) / 18 * 100).toFixed(2)}%">${ND.fmtTime(d.t)}</span>`).join('')}</div></div>
     </div>
@@ -226,7 +226,7 @@
 
 <section class="lp-night" aria-label="Walkthrough"><div class="lp-night-in">
   <div class="lp-wi-frame" data-rv>${[['Living room', 'L1-dusk'], ['Bedroom', 'D3-quiet-bedroom'], ['Home office', 'L2-morning']].map(([n, f], i) => `<img src="img/${f}.webp" alt="${n}" class="${i === 0 ? 'on' : ''}" data-r="${i}">`).join('')}</div>
-  <div class="lp-wi-text" data-rv style="--i:1"><p class="lp-wi-label"><span class="num">06</span>Walkthrough</p><h2 class="lp-h">Walk through it before you move.</h2><p class="lp-p">Step inside at eye height, one room at a time.</p>
+  <div class="lp-wi-text" data-rv style="--i:1"><p class="lp-wi-label">Walkthrough</p><h2 class="lp-h">Walk through it before you move.</h2><p class="lp-p">Step inside at eye height, one room at a time.</p>
     <ol class="lp-wi-rooms">${[['Living room', 'Sofa, desk corner, the window to the city.'], ['Bedroom', 'Low bed, paper lantern, blackout linen.'], ['Home office', 'Standing desk, task chair, morning light.']].map(([n, d], i) => `<li><a href="#signup" data-r="${i}" class="${i === 0 ? 'on' : ''}"><span class="lp-wi-no">${roman[i]}</span><span><b>${n}</b><small>${d}</small></span><span class="lp-wi-go">Enter <span aria-hidden="true">→</span></span></a></li>`).join('')}</ol>
   </div></div></section>
 </main>

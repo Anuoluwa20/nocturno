@@ -30,7 +30,7 @@
     const st = A.getStage(); const mobile = matchMedia('(max-width: 760px)').matches;
     let userLook = false; let selected = null, roomFocus = 'all', cat = 'All', q = '', inspTab = 'room', hist = [], fut = [];
     const snap = () => JSON.stringify({ items: p.items, rooms: p.rooms, atmos: p.atmos });
-    function commit(label) { hist.push(lastSnap); if (hist.length > 80) hist.shift(); fut = []; lastSnap = snap(); NStore.saveProject(p); paintBar(); }
+    function commit(label) { hist.push(lastSnap); if (hist.length > 80) hist.shift(); fut = []; lastSnap = snap(); NStore.saveProject(p); paintBar(); paintRooms(); }
     let lastSnap = snap();
     function restore(sn) { const o = JSON.parse(sn); p.items = o.items; p.rooms = o.rooms; p.atmos = o.atmos; lastSnap = sn; st.setProject(p, { keepCamera: true }); select(null); NStore.saveProject(p); paintBar(); paintDial(); }
     const undo = () => { if (!hist.length) return; fut.push(snap()); restore(hist.pop()); toast('Undone'); };
@@ -53,12 +53,14 @@
   <div class="float view-tools d-only" role="toolbar" aria-label="Camera"><button class="t" data-cam="orbit" aria-pressed="true">Orbit</button><button class="t" data-cam="top" aria-pressed="false">Plan</button><button class="t" data-cam="eye" aria-pressed="false">Eye level</button><a class="t" href="#walk">${ic('walk', 16)} Walk</a></div>
   <div class="float panel-toggles d-only"><button class="icon-btn" id="tRail" aria-pressed="true" aria-label="Show library" title="Library">${ic('lib')}</button><button class="icon-btn" id="tInsp" aria-pressed="true" aria-label="Show inspector" title="Inspector">${ic('panel')}</button></div>
   <div class="m-bar" style="display:none"><button class="icon-btn" id="mLib" aria-label="Open library">${ic('plus')}</button><button class="icon-btn" id="mInsp" aria-label="Open inspector">${ic('panel')}</button><button class="icon-btn" id="mLook" aria-label="Toggle sketch look">${ic('eye')}</button><a class="icon-btn" href="#walk" aria-label="Walk through">${ic('walk')}</a></div>
+  <div class="float ctx" id="ctx" role="toolbar" aria-label="Selected piece"></div>
   <svg class="dim-overlay" id="dimo" aria-hidden="true"></svg>
   <div class="float dusk-dial"><div class="dial-head"><button class="icon-btn" id="play" aria-label="Play a full day" aria-pressed="false" title="Play a day" style="width:32px;height:32px;margin-left:-6px"><svg class="i" viewBox="0 0 24 24"><path id="playP" d="M8 5l11 7-11 7z"/></svg></button><span class="label d-only">Time of day</span>${A.phasesRow(false)}<span class="dial-time"><span id="dT"></span> <em id="dLab"></em></span></div>${ruler('dial', 'Time of day')}</div>
 </div>
 <aside class="insp" id="insp" aria-label="Inspector"><span class="grab" style="display:none"></span><div id="inspIn"></div></aside>
 </div></div>`;
     const body = $('#body', v), host = $('#stage', v); document.body.classList.add('in-editor');
+    { const vt = $('.view-tools', v), lk = $('.ed-bar .seg', v); if (vt && lk) { const sp = document.createElement('span'); sp.className = 'vt-sep'; vt.appendChild(sp); vt.appendChild(lk); } } { const pt = $('.panel-toggles', v), bp = $('#bp', v); if (pt && bp) bp.parentNode.insertBefore(pt, bp); }
 
     // ----- stage -----
     if (!st.ok || !st.mount(host)) { $('#veil', v).remove(); webglFallback(host, p); }
@@ -118,9 +120,24 @@
 
     // ----- rooms -----
     function paintRooms() {
-      const R = $('#rooms', v);
-      R.innerHTML = (p.rooms.length > 1 ? `<button aria-pressed="${roomFocus === 'all'}" data-r="all">Whole home</button>` : '') + p.rooms.map(r => `<button aria-pressed="${roomFocus === r.id || (p.rooms.length === 1)}" data-r="${r.id}">${esc(r.name)}</button>`).join('');
+      const R = $('#rooms', v); if (!R) return;
+      const W = Math.max(...p.rooms.map(r => r.x + r.w)), D = Math.max(...p.rooms.map(r => r.z + r.d)); const sc = Math.min(224 / W, 120 / D);
+      const rec = selected && recOf(selected);
+      R.innerHTML = `<div class="rp-head"><span class="label">Plan</span>${p.rooms.length > 1 ? `<button class="rp-all" data-r="all" aria-pressed="${roomFocus === 'all'}">Whole home</button>` : `<span class="rp-area num">${A.area(p.rooms[0].w * p.rooms[0].d)}</span>`}</div>
+        <div class="rp-plan" style="width:${(W * sc).toFixed(1)}px;height:${(D * sc).toFixed(1)}px">${p.rooms.map(r => { const n = p.items.filter(i => i.room === r.id); const on = roomFocus === r.id || p.rooms.length === 1;
+          return `<button class="rp-room" data-r="${r.id}" aria-pressed="${on}" aria-label="${esc(r.name)}, ${n.length} pieces" style="left:${(r.x * sc).toFixed(1)}px;top:${(r.z * sc).toFixed(1)}px;width:${(r.w * sc).toFixed(1)}px;height:${(r.d * sc).toFixed(1)}px">${n.map(i => `<i class="${rec && i.uid === rec.uid ? 'sel' : ''}" style="left:${((i.x - r.x) / r.w * 100).toFixed(1)}%;top:${((i.z - r.z) / r.d * 100).toFixed(1)}%"></i>`).join('')}<span>${esc(r.name)}</span></button>`; }).join('')}</div>`;
       $$('button', R).forEach(b => b.onclick = () => { roomFocus = b.dataset.r; paintRooms(); if (st.ok) st.frameRoom(roomFocus === 'all' ? null : roomFocus, true, roomFocus === 'all' ? 'dollhouse' : 'orbit'); camPressed(roomFocus === 'all' ? 'dollhouse' : 'orbit'); if (!selected) paintInsp(); });
+    }
+    // contextual bar: what you can do with the selected piece, right where you are looking
+    function paintCtx() {
+      const C = $('#ctx', v); if (!C) return; const rec = selected && recOf(selected);
+      if (!rec) { C.classList.remove('on'); return; }
+      const it = ND.itemById[rec.item];
+      C.innerHTML = `<span class="ctx-name"><b>${esc(it.name)}</b><small class="num">${money(itemCost(rec))}</small></span><span class="ctx-sep"></span>
+        <button class="icon-btn" data-x="rl" aria-label="Rotate left" title="Rotate left">${ic('rotL', 16)}</button><button class="icon-btn" data-x="rr" aria-label="Rotate right" title="Rotate right (R)">${ic('rotR', 16)}</button><button class="icon-btn" data-x="dup" aria-label="Duplicate" title="Duplicate">${ic('plus', 16)}</button><button class="icon-btn danger" data-x="del" aria-label="Delete" title="Delete">${ic('x', 16)}</button>
+        <span class="ctx-sep"></span><button class="ctx-more" data-x="more">Finishes</button>`;
+      C.classList.add('on');
+      $$('[data-x]', C).forEach(b => b.onclick = () => { const x = b.dataset.x; if (x === 'more') { setPanel('insp', true); inspTab = 'item'; paintInsp(); return; } if (x === 'rl' || x === 'rr') { rotateBy(rec, x === 'rl' ? -1 : 1); return; } const t = $('#' + x, $('#inspIn', v)); if (t) t.click(); });
     }
     paintRooms();
     function camPressed(c) { $$('[data-cam]', v).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cam === c))); }
@@ -194,7 +211,7 @@
         <div class="insp-sec"><p class="label">In this room</p>${c.items.length ? `<div style="display:grid">${c.items.map(x => `<button class="btn quiet sm" style="justify-content:space-between;padding:0" data-pick="${x.rec.uid}"><span>${esc(ND.itemById[x.rec.item].name)}</span><span class="num muted">${money(x.cost)}</span></button>`).join('')}</div>` : '<p class="small muted">Empty. Add pieces from the library.</p>'}${c.items.length ? '<button class="btn ghost sm" id="clrR">Clear this room</button>' : ''}</div>`;
         I.dataset.room = room.id;
       }
-      I.innerHTML = tabs + h; A.lazyThumbs(I);
+      I.innerHTML = tabs + h; A.lazyThumbs(I); paintRooms(); paintCtx();
       $$('[data-tab]', I).forEach(b => b.onclick = () => { inspTab = b.dataset.tab; paintInsp(); });
       const ix = $('#inspX', I); if (ix) ix.onclick = () => setPanel('insp', false);
       if (inspTab === 'item' && rec) bindItem(I, rec); else if (inspTab === 'light') bindLight(I); else bindRoom(I);
